@@ -1,0 +1,11 @@
+setup.py
+app/__init__.py
+app/models.py
+app/routes.py
+app/services.py
+assistente_limites.egg-info/PKG-INFO
+assistente_limites.egg-info/SOURCES.txt
+assistente_limites.egg-info/dependency_links.txt
+assistente_limites.egg-info/not-zip-safe
+assistente_limites.egg-info/requires.txt
+assistente_limites.egg-info/top_level.txt

@@ -1,0 +1,15 @@
+flask
+Flask-SQLAlchemy
+Pillow
+pix2tex[torch]
+sympy
+matplotlib
+pandas
+scikit-learn
+antlr4-python3-runtime==4.11.1
+WTForms==3.0.1
+Flask-Login
+Flask-WTF
+email-validator
+WTForms==3.0.1
+Flask-Babel

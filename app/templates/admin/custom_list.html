@@ -1,0 +1,41 @@
+{% extends 'admin/model/list.html' %}
+
+{% block list_header %}
+  {# --- INÍCIO DA NOVA LÓGICA --- #}
+  {# Verificamos o 'endpoint' da página atual para decidir qual texto mostrar #}
+
+  <div class="alert alert-info" role="alert">
+    <h4 class="alert-heading">Instruções</h4>
+    
+    {% if 'limite' in request.endpoint %}
+      <p class="mb-0">
+        Esta é a página para gerenciar os desafios de limite. Clique em <strong>Criar</strong> para adicionar um novo desafio. Lembre-se que, para cada limite criado, você deve adicionar as perguntas correspondentes na seção <strong>Perguntas</strong>.
+      </p>
+
+    {% elif 'perguntasestrategicas' in request.endpoint %}
+      <p class="mb-0">
+        Aqui você gerencia as perguntas de múltipla escolha que guiam o aluno na resolução de cada limite. Ao criar uma pergunta, use a caixa de busca para associá-la ao <strong>Limite</strong> correto.
+      </p>
+
+    {% elif 'estrategia' in request.endpoint %}
+      <p class="mb-0">
+        As estratégias são os métodos de resolução (ex: Fatoração, L'Hôpital). Cadastrá-las aqui garante a consistência dos dados em toda a plataforma.
+      </p>
+
+    {% elif 'tiposindeterminacao' in request.endpoint %}
+      <p class="mb-0">
+        Aqui você cadastra os tipos de indeterminação (ex: 0/0) que serão associados a cada limite.
+      </p>
+    
+    {% elif 'usuario' in request.endpoint %}
+      <p class="mb-0">
+        Esta página exibe todos os usuários cadastrados. Você pode criar, editar ou remover usuários, e também promover um usuário a administrador marcando a opção "Admin".
+      </p>
+
+    {% endif %}
+  </div>
+  {# --- FIM DA NOVA LÓGICA --- #}
+  
+  {# Inclui o conteúdo original do cabeçalho da lista (como os botões de criar) #}
+  {{ super() }}
+{% endblock %}

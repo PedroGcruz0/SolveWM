@@ -1,0 +1,51 @@
+{% extends 'admin/base.html' %}
+
+{% block head_css %}
+    {{ super() }}
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container-fluid { max-width: 1400px; margin: 0 auto; }
+    </style>
+{% endblock %}
+
+{% block tail %}
+    {{ super() }}
+    <script>
+      MathJax = {
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLimiteFormPage = window.location.pathname.startsWith('/admin/limite/new') ||
+                                     window.location.pathname.startsWith('/admin/limite/edit');
+            if (isLimiteFormPage) {
+                const latexInput = document.getElementById('latex_str');
+                if (latexInput) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.id = 'latex-preview';
+                    previewDiv.style.marginTop = '15px';
+                    previewDiv.style.padding = '20px';
+                    previewDiv.style.border = '1px solid #dee2e6';
+                    previewDiv.style.borderRadius = '.25rem';
+                    previewDiv.style.minHeight = '60px';
+                    previewDiv.style.fontSize = '1.2em';
+                    previewDiv.style.backgroundColor = '#f8f9fa';
+                    latexInput.parentNode.insertBefore(previewDiv, latexInput.nextSibling);
+
+                    const updatePreview = () => {
+                        const latexCode = latexInput.value;
+                        previewDiv.innerHTML = `$$${latexCode}$$`;
+                        MathJax.typesetPromise([previewDiv]).catch((err) => console.log('Erro no MathJax: ', err.message));
+                    };
+                    updatePreview();
+                    latexInput.addEventListener('input', updatePreview);
+                }
+            }
+        });
+    </script>
+{% endblock %}

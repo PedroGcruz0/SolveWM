@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Página Inicial - Solve WM{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-5 fw-bold">Bem-vindo ao Solve WM</h1>
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">
+                Uma plataforma inteligente para aprender e praticar limites. Escolha uma das ferramentas abaixo para começar.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4 pb-5 row-cols-1 row-cols-lg-2">
+        <div class="col">
+            <div class="card h-100">
+                <img src="/static/assistente.png" class="card-img-top" alt="Assistente de Limites" style="height: 300px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Assistente dos Limites</h5>
+                    <p class="card-text">Envie uma imagem ou digite um limite e receba os procedimentos e estratégias de resolução recomendados.</p>
+                    <a href="{{ url_for('main.assistente') }}" class="btn btn-primary mt-auto">Usar Assistente</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card h-100">
+                <img src="/static/tutor1.png" class="card-img-top" alt="Tutor de Limites" style="height: 300px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Tutor dos Limites</h5>
+                    <p class="card-text">Encare desafios de limites selecionados. Responda a perguntas estratégicas e receba feedback para aprimorar seu conhecimento.</p>
+                    <a href="{{ url_for('main.tutor') }}" class="btn btn-primary mt-auto">Iniciar Treinamento</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
