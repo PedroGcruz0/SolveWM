@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/telainicial.css') }}">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <h1>Bem-vindo ao SolveWithMe</h1>
+      <form action="/enviar" method="post">
+        <label for="email">Email</label>
+        <input name="email" type="email" id="email" placeholder="Digite seu email" required>
+        
+        <label for="password">Senha</label>
+        <input name="password"type="password" id="password" placeholder="Digite sua senha" required>
+        
+        <button type="submit">Entrar</button>
+      </form>
+      <p class="signup-link">Não tem conta? <a href="#">Cadastre-se</a></p>
+    </div>
+  </div>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+</body>
+</html>
