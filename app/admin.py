@@ -50,7 +50,7 @@ class SolveWMBaseView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('main.login', next=request.url))
 
-# --- View Customizada para a Análise (COM A LÓGICA RESTAURADA) ---
+# --- View Customizada para a Análise ---
 class AnalysisView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin

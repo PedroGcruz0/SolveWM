@@ -177,3 +177,19 @@ def download_report(filename):
     
     reports_dir = os.path.join(os.path.dirname(current_app.instance_path), 'reports')
     return send_from_directory(reports_dir, filename, as_attachment=True)
+
+
+@main_bp.route('/admin/cadastrar-limite', methods=['GET', 'POST'])
+@login_required
+def admin_cadastrar():
+    # Verifica se é admin
+    if not current_user.is_admin:
+        flash('Acesso restrito a administradores.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Aqui entraria a lógica para salvar no banco de dados (POST)
+    if request.method == 'POST':
+        # Exemplo: processar o formulário
+        pass
+
+    return render_template('admin_cadastro.html')

@@ -6,7 +6,7 @@ from .routes import main_bp
 from .admin import setup_admin
 from flask_login import LoginManager
 from pix2tex.cli import LatexOCR
-from flask_babel import Babel  # 1. Importa a biblioteca Babel
+from flask_babel import Babel 
 import os
 
 def create_app():
@@ -20,10 +20,8 @@ def create_app():
     except OSError:
         pass
 
-    # --- CONFIGURAÇÃO DE IDIOMA ---
     app.config['BABEL_DEFAULT_LOCALE'] = 'pt_BR'  # 2. Define o idioma padrão
     babel = Babel(app)                             # 3. Inicializa o Babel com o app
-    # --- FIM DA CONFIGURAÇÃO DE IDIOMA ---
 
     # Inicializa as outras extensões
     db.init_app(app)
