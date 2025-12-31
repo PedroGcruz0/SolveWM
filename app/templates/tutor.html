@@ -1,226 +1,35 @@
-{% extends "base.html" %}
-
-{% block title %}Tutor de Limites - Treinamento{% endblock %}
+{% extends "modelo.html" %}
+{% block title %}Tutor - {{ turma.nome }}{% endblock %}
 
 {% block styles %}
-<style>
-    .chat-page-wrapper { display: flex; justify-content: center; align-items: center; height: calc(100vh - 76px); padding: 10px 0; }
-    #chat-container { width: 90%; max-width: 600px; height: 100%; background-color: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-    #chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #fcfdff; }
-    .message { display: flex; max-width: 100%; align-items: flex-end; }
-    .bot-message { align-self: flex-start; gap: 10px; }
-    .bubble { border-radius: 18px; padding: 10px 15px; word-wrap: break-word; max-width: 450px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .bot-message .bubble { background-color: #EBF8FF; color: #2D3748; border-bottom-left-radius: 4px; }
-    .limite-formula-container { width: 100%; text-align: center; margin: 15px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; font-size: 1.5em; }
-    .progress-indicator { font-size: 0.8em; color: #718096; margin-bottom: 5px; }
-    .alternativas-container { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .alternativa-btn { background-color: #fff; border: 1px solid #CBD5E0; border-radius: 8px; padding: 10px; text-align: left; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; width: 100%; font-size: 1em; }
-    .alternativa-btn:hover:not(:disabled) { background-color: #EBF8FF; border-color: #3182CE; }
-    .alternativa-btn:disabled { cursor: not-allowed; opacity: 0.8; }
-    .alternativa-correta { color: #38A169; border-color: #38A169; background-color: #F0FFF4; }
-    .alternativa-incorreta { color: #E53E3E; border-color: #E53E3E; background-color: #FFF5F5; }
-    .feedback-text { font-size: 0.9em; font-weight: bold; margin-top: 10px; }
-    .feedback-correto { color: #38A169; }
-    .feedback-incorreto { color: #E53E3E; }
-    .summary-card { border: 1px solid #3182CE; background-color: #EBF8FF; padding: 15px; border-radius: 8px; margin-top: 10px; }
-    .summary-card h3 { margin-top: 0; color: #2B6CB0; }
-    #next-problem-btn { background-color: #3182CE; color: white; border: none; border-radius: 8px; padding: 10px 15px; font-size: 1em; cursor: pointer; margin-top: 15px; width: 100%; }
-    #next-problem-btn:hover { background-color: #2B6CB0; }
-    .bot-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #E2E8F0; flex-shrink: 0; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutor.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="chat-page-wrapper">
-    <div id="chat-container">
-        <div id="chat-box" aria-live="polite">
-            </div>
+<div class="tutor-wrap">
+  <div class="tutor-card">
+    <div class="tutor-top">
+      <div>
+        <div class="fw-bold">Turma: {{ turma.nome }}</div>
+        <div class="small text-muted">Conteúdo definido pelo professor</div>
+      </div>
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('site.area_aluno') }}">Trocar turma</a>
     </div>
+
+    <div id="chat" class="tutor-chat"></div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-    <script>
-      MathJax = {
-        tex: {
-          inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-        svg: {
-          fontCache: 'global'
-        }
-      };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-
 <script>
-    const chatBox = document.getElementById('chat-box');
-    
-    let state = {
-        tentativa_id: null,
-        perguntas: [],
-        currentQuestionIndex: 0,
-        correctAnswersCount: 0,
-    };
-
-    function scrollToBottom() {
-        setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
-    }
-
-    function appendMessage(htmlContent, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}-message`;
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'bubble';
-        bubbleDiv.innerHTML = htmlContent;
-        if (sender === 'bot') {
-            const avatar = document.createElement('img');
-            avatar.src = '/static/img_logo.png';
-            avatar.alt = 'Bot Avatar';
-            avatar.className = 'bot-avatar';
-            messageDiv.appendChild(avatar);
-        }
-        messageDiv.appendChild(bubbleDiv);
-        chatBox.appendChild(messageDiv);
-        return messageDiv;
-    }
-
-    function displayAttemptSummary() {
-        const totalPerguntas = state.perguntas.length;
-        const pontuacao = totalPerguntas > 0 ? (state.correctAnswersCount / totalPerguntas) * 100 : 0;
-        const dominou = pontuacao >= 70;
-        let summaryHtml = `
-            <div class="summary-card">
-                <h3>Fim do Desafio!</h3>
-                <p>Você acertou <strong>${state.correctAnswersCount}</strong> de <strong>${totalPerguntas}</strong> perguntas.</p>
-                <p>Sua pontuação: <strong>${pontuacao.toFixed(0)}%</strong></p>
-                <p>Resultado: <strong>${dominou ? 'Estratégia Dominada! ✅' : 'Precisa de mais prática.'}</strong></p>
-                <button id="next-problem-btn">Próximo Desafio</button>
-            </div>`;
-        const summaryMessage = appendMessage(summaryHtml, "bot");
-        summaryMessage.querySelector('#next-problem-btn').addEventListener('click', fetchNextProblem);
-        scrollToBottom();
-    }
-
-    function displayCurrentQuestion() {
-        if (state.currentQuestionIndex >= state.perguntas.length) {
-            displayAttemptSummary();
-            return; 
-        }
-        const pergunta = state.perguntas[state.currentQuestionIndex];
-        const progress = `<div class="progress-indicator">Passo ${state.currentQuestionIndex + 1} de ${state.perguntas.length}</div>`;
-        let alternativasHtml = '<div class="alternativas-container">';
-        for (const [key, value] of Object.entries(pergunta.alternativas)) {
-            if (value) {
-                alternativasHtml += `<button class="alternativa-btn" data-key="${key}"><strong>${key.toUpperCase()}:</strong> ${value}</button>`;
-            }
-        }
-        alternativasHtml += '</div>';
-        const questionMessage = appendMessage(progress + pergunta.texto + alternativasHtml, "bot");
-        questionMessage.querySelectorAll('.alternativa-btn').forEach(button => {
-            button.addEventListener('click', () => handleAnswer(button));
-        });
-        scrollToBottom();
-    }
-
-    async function handleApiResponse(response, thinkingMessage) {
-        if (response.redirected) {
-            window.location.href = response.url;
-            return null;
-        }
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            if (thinkingMessage) thinkingMessage.querySelector('.bubble').innerHTML = `<strong>Erro Inesperado:</strong> O servidor não respondeu corretamente. Verifique o terminal para mais detalhes.`;
-            throw new TypeError("A resposta não é um JSON válido.");
-        }
-
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || data.tipo || 'Ocorreu um erro desconhecido.');
-        }
-        return data;
-    }
-
-    async function fetchNextProblem() {
-        chatBox.innerHTML = '';
-        const thinkingMessage = appendMessage("Buscando um novo desafio...", "bot");
-        try {
-            const response = await fetch('/get-problem', { method: 'POST' });
-            const problemData = await handleApiResponse(response, thinkingMessage);
-            
-            if (problemData) {
-                state.tentativa_id = problemData.tentativa_id;
-                state.perguntas = problemData.perguntas;
-                state.currentQuestionIndex = 0;
-                state.correctAnswersCount = 0;
-                
-                thinkingMessage.remove();
-                const limiteHtml = `<div class="limite-formula-container">$$${problemData.limite_latex}$$</div>`;
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                messageDiv.innerHTML = limiteHtml;
-                chatBox.appendChild(messageDiv);
-
-                MathJax.typesetPromise([messageDiv]).catch((err) => console.log('MathJax error: ', err));
-                
-                displayCurrentQuestion();
-            }
-        } catch (error) {
-            if (thinkingMessage) thinkingMessage.querySelector('.bubble').innerHTML = `<strong>${error.message}</strong>`;
-        }
-    }
-
-    async function handleAnswer(buttonElement) {
-        const chosenAlternative = buttonElement.dataset.key;
-        const pergunta = state.perguntas[state.currentQuestionIndex];
-        const allButtons = buttonElement.parentElement.querySelectorAll('.alternativa-btn');
-        allButtons.forEach(btn => btn.disabled = true);
-
-        try {
-            const response = await fetch('/submit-answer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tentativa_id: state.tentativa_id,
-                    pergunta_id: pergunta.id,
-                    alternativa_escolhida: chosenAlternative
-                })
-            });
-            const result = await handleApiResponse(response);
-
-            if (result) {
-                const feedbackDiv = document.createElement('div');
-                if (result.foi_correta) {
-                    state.correctAnswersCount++;
-                    buttonElement.classList.add('alternativa-correta');
-                    feedbackDiv.className = 'feedback-text feedback-correto';
-                    feedbackDiv.textContent = 'Correto!';
-                } else {
-                    buttonElement.classList.add('alternativa-incorreta');
-                    const correctButton = buttonElement.parentElement.querySelector(`[data-key="${result.resposta_correta}"]`);
-                    if (correctButton) correctButton.classList.add('alternativa-correta');
-                    feedbackDiv.className = 'feedback-text feedback-incorreto';
-                    feedbackDiv.textContent = `Incorreto. A resposta certa era a letra ${result.resposta_correta.toUpperCase()}.`;
-                }
-                buttonElement.parentElement.appendChild(feedbackDiv);
-                state.currentQuestionIndex++;
-                setTimeout(() => {
-                    displayCurrentQuestion();
-                }, 2000);
-            }
-        } catch (error) {
-            appendMessage(`<strong>Erro:</strong> ${error.message}`, "bot");
-        }
-    }
-
-    const observer = new MutationObserver(scrollToBottom);
-    observer.observe(chatBox, { childList: true });
-
-    window.onload = function() {
-        if (window.location.pathname.endsWith('/tutor')) {
-             fetchNextProblem();
-        }
-    };
+  MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$'], ['$$','$$']] }, svg: { fontCache: 'global' } };
 </script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script>
+  window.SWM = {
+    logoUrl: "{{ url_for('static', filename='img/logo.png') }}"
+  };
+</script>
+<script src="{{ url_for('static', filename='js/tutor.js') }}"></script>
 {% endblock %}

@@ -1,6 +1,6 @@
 # create_admin.py
 from app import create_app
-from app.models import db, Usuario
+from app.modelos import db, Usuario
 from werkzeug.security import generate_password_hash
 import getpass # Usaremos getpass para esconder a senha
 

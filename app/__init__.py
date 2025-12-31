@@ -1,50 +1,36 @@
-# app/__init__.py
-from flask import Flask
-from config import Config
-from .models import db, Usuario
-from .routes import main_bp
-from .admin import setup_admin
-from flask_login import LoginManager
-from pix2tex.cli import LatexOCR
-from flask_babel import Babel 
 import os
+from flask import Flask
+from flask_login import LoginManager
+from flask_babel import Babel
+
+from config import Config
+from .modelos import db, Usuario
+from .rotas import site_bp
+from .painel_admin import configurar_admin
+
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
-    # Garante que as pastas necessárias existam
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-    app.config['BABEL_DEFAULT_LOCALE'] = 'pt_BR'  # 2. Define o idioma padrão
-    babel = Babel(app)                             # 3. Inicializa o Babel com o app
+    Babel(app)
 
-    # Inicializa as outras extensões
     db.init_app(app)
-    setup_admin(app)
 
-    login_manager = LoginManager()
-    login_manager.login_view = 'main.login'
-    login_manager.init_app(app)
+    login = LoginManager()
+    login.login_view = "site.entrar"
+    login.init_app(app)
 
-    @login_manager.user_loader
+    @login.user_loader
     def load_user(user_id):
-        return Usuario.query.get(int(user_id))
+        return db.session.get(Usuario, int(user_id))
 
-    # Carrega o modelo de IA
-    print("Carregando modelo LaTeX-OCR...")
-    app.latex_ocr_model = LatexOCR()
-    print("Modelo LaTeX-OCR carregado com sucesso.")
-
-    # Cria as tabelas do banco de dados
     with app.app_context():
         db.create_all()
 
-    # Registra as rotas
-    app.register_blueprint(main_bp)
-
+    app.register_blueprint(site_bp)
+    configurar_admin(app)
     return app

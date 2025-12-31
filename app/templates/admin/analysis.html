@@ -1,90 +1,70 @@
-{% extends 'admin/my_master.html' %}
+{% extends "admin/swm_admin.html" %}
 
-{% block head_css %}
-  {{ super() }}
-  <style>
-    #chart-container {
-      position: relative;
-      margin: auto;
-      height: 60vh;
-      width: 80vw;
-      max-width: 900px;
-    }
-  </style>
-{% endblock %}
 
 {% block body %}
-  <h1>
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-bar-chart-line-fill icon-header" viewBox="0 0 16 16" style="display: inline-block; margin-right: 10px; vertical-align: middle;">
-        <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2z"/>
-    </svg>
-    Dashboard de Análise de Alunos
-  </h1>
-  <p class="lead">
-    Execute a análise para gerar ou atualizar os relatórios sobre os perfis de aprendizado.
-  </p>
-  
-  <a href="{{ url_for('main.run_analysis_route') }}" class="btn btn-primary btn-lg mt-3 mb-4">
-    Executar/Atualizar Análise
-  </a>
+<div class="container-fluid mt-3">
+  <h3 class="mb-3">Análise por Turma (taxa de erro por tópico)</h3>
 
-  <hr>
+  <form class="form-inline mb-3" method="get" action="{{ url_for('analise.index') }}">
+    <label class="mr-2">Turma:</label>
+    <select class="form-control mr-2" name="turma_id">
+      <option value="">Todas</option>
+      {% for t in turmas %}
+        <option value="{{ t.id }}" {% if turma_id==t.id %}selected{% endif %}>{{ t.nome }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-primary" type="submit">Ver</button>
 
-  {% if analysis_df_display is not none and profiles_df_display is not none %}
-    
-    <h3 class="mt-4">Gráfico de Desempenho por Perfil de Aluno</h3>
-    <p>O gráfico abaixo mostra a <strong>taxa de erro média (%)</strong> de cada grupo para cada estratégia. Barras mais altas indicam maior dificuldade.</p>
-    <div id="chart-container" class="mb-5">
-        <canvas id="kmeansChart"></canvas>
+    <a class="btn btn-outline-primary ml-2"
+       href="{{ url_for('analise.executar', turma_id=turma_id) if turma_id else url_for('analise.executar') }}">
+      Rodar análise
+    </a>
+  </form>
+
+{% if df_alunos is none or df_alunos.empty %}
+  <div class="alert alert-warning">Sem dados ainda. O aluno precisa responder desafios antes.</div>
+{% else %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="mb-2">Taxa de erro média por grupo</h5>
+      <canvas id="chart" height="120"></canvas>
     </div>
+  </div>
 
-    <h3 class="mt-4">Análise dos Perfis de Aprendizado (Grupos)</h3>
-    {{ analysis_df_display.to_html(classes=['table', 'table-bordered', 'table-striped', 'table-hover'], border=0, index=False) | safe }}
-    
-    <h3 class="mt-4">Distribuição de Alunos por Perfil (Taxa de Erro Individual)</h3>
-    {{ profiles_df_display.to_html(classes=['table', 'table-bordered', 'table-striped', 'table-hover'], index=False, border=0) | safe }}
-    
-    <h4 class="mt-4">Baixar Relatórios Completos</h4>
-    <div class="list-group">
-        <a href="{{ url_for('main.download_report', filename='analise_dos_clusters.csv') }}" class="list-group-item list-group-item-action">analise_dos_clusters.csv</a>
-        <a href="{{ url_for('main.download_report', filename='resultado_clusters_usuarios.csv') }}" class="list-group-item list-group-item-action">resultado_clusters_usuarios.csv</a>
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="mb-2">Distribuição por aluno</h5>
+      <div style="overflow:auto;">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              {% for c in df_alunos.columns %}
+                <th>{{ c }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for _, row in df_alunos.iterrows() %}
+              <tr>
+                {% for c in df_alunos.columns %}
+                  <td>{{ row[c] }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+{% endif %}
 
-  {% else %}
-    <div class="alert alert-info mt-4">
-      Nenhum relatório encontrado. Clique em "Executar/Atualizar Análise" para gerar o primeiro dashboard.
-    </div>
-  {% endif %}
 
-{% endblock %}
-
-{% block tail %}
-    {{ super() }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      const chartData = {{ chart_data | tojson | safe }};
-      if (chartData) {
-        const ctx = document.getElementById('kmeansChart');
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: chartData.labels,
-            datasets: chartData.datasets
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) { return value + '%' }
-                },
-                title: { display: true, text: 'Taxa de Erro Média (%)' }
-              }
-            }
-          }
-        });
-      }
-    </script>
+{% if chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('chart');
+  const data = {{ chart_data|tojson }};
+  new Chart(ctx, { type: 'bar', data });
+</script>
+{% endif %}
 {% endblock %}
