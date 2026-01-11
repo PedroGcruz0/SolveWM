@@ -1,0 +1,630 @@
+{# app/templates/admin/atividades.html #}
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-1">Atividades</h2>
+      <div class="text-muted">Gerencie questões e perguntas no mesmo lugar.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoDesafio">
+        <i class="bi bi-plus-circle"></i> Nova questão
+      </button>
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovaPergunta">
+        <i class="bi bi-plus"></i> Nova pergunta
+      </button>
+    </div>
+  </div>
+
+  {# Filtros #}
+  <form class="row g-2 align-items-end mb-3" method="get" action="{{ url_for('atividades.index') }}">
+    <div class="col-12 col-md-4">
+      <label class="form-label">Disciplina (opcional)</label>
+      <select class="form-select" name="disciplina_id">
+        <option value="">Todas</option>
+        {% for d in disciplinas_dropdown %}
+          <option value="{{ d.id }}" {% if disciplina_id==d.id %}selected{% endif %}>{{ d.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <label class="form-label">Tópico (opcional)</label>
+      <select class="form-select" name="topico_id">
+        <option value="">Todos</option>
+        {% for t in topicos_dropdown %}
+          <option value="{{ t.id }}" {% if topico_id==t.id %}selected{% endif %}>
+            {{ t.disciplina.nome }} — {{ t.nome }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-md-4 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+      {% if disciplina_id or topico_id %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('atividades.index') }}">Limpar</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if not topicos_cards %}
+    <div class="alert alert-warning">
+      Nenhum tópico encontrado. Crie disciplinas e tópicos em <strong>Conteúdos</strong>.
+    </div>
+  {% else %}
+
+    <div class="row g-3">
+      {% for t in topicos_cards %}
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <h4 class="mb-0">{{ t.topico_nome }}</h4>
+                    <span class="badge text-bg-light border">{{ t.disciplina_nome }}</span>
+                  </div>
+                  {% if t.topico_descricao %}
+                    <div class="text-muted mt-1">{{ t.topico_descricao }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                  <span class="badge text-bg-primary">Questões: {{ t.n_desafios }}</span>
+                  <span class="badge text-bg-secondary">Perguntas: {{ t.n_perguntas }}</span>
+
+                  <button class="btn btn-outline-primary btn-sm"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#topico{{ t.topico_id }}">
+                    <i class="bi bi-list-ul"></i> Ver questões
+                  </button>
+                </div>
+              </div>
+
+              <div class="collapse mt-3" id="topico{{ t.topico_id }}">
+                {% if not t.desafios %}
+                  <div class="alert alert-light border mb-0">
+                    Ainda não há questões neste tópico.
+                  </div>
+                {% else %}
+                  <div class="vstack gap-2">
+                    {% for des in t.desafios %}
+                      <div class="card border">
+                        <div class="card-body">
+                          <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                            <div>
+                              <div class="d-flex align-items-center gap-2">
+                                <div class="fw-semibold">{{ des.titulo }}</div>
+                                <span class="badge text-bg-info">perguntas: {{ des.n_perguntas }}</span>
+
+                                {% if des.enunciado_imagem %}
+                                  <span class="badge text-bg-light border">
+                                    <i class="bi bi-image"></i> imagem
+                                  </span>
+                                {% endif %}
+                              </div>
+
+                              {% if des.preview %}
+                                <div class="text-muted small mt-1">
+                                  {{ des.preview }}
+                                </div>
+                              {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                              <button class="btn btn-outline-secondary btn-sm"
+                                      type="button"
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#modalEditarDesafio"
+                                      data-id="{{ des.id }}"
+                                      data-topico="{{ t.topico_id }}"
+                                      data-titulo="{{ des.titulo|e }}"
+                                      data-texto="{{ (des.enunciado_texto|default(''))|e }}"
+                                      data-img="{{ des.enunciado_imagem|default('', true) }}">
+                                <i class="bi bi-pencil"></i> Editar
+                              </button>
+
+                              <button class="btn btn-outline-primary btn-sm"
+                                      type="button"
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#modalNovaPergunta"
+                                      data-desafio="{{ des.id }}">
+                                <i class="bi bi-plus"></i> Pergunta
+                              </button>
+
+                              <button class="btn btn-outline-danger btn-sm"
+                                      type="button"
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#modalRemover"
+                                      data-acao="delete_desafio"
+                                      data-id="{{ des.id }}"
+                                      data-titulo="Remover questão"
+                                      data-msg="Tem certeza que deseja remover a questão '{{ des.titulo|e }}' (e suas perguntas)?">
+                                <i class="bi bi-trash"></i> Remover
+                              </button>
+
+                              <button class="btn btn-outline-primary btn-sm"
+                                      type="button"
+                                      data-bs-toggle="collapse"
+                                      data-bs-target="#des{{ des.id }}">
+                                <i class="bi bi-chevron-down"></i> Ver perguntas
+                              </button>
+                            </div>
+                          </div>
+
+                          <div class="collapse mt-3" id="des{{ des.id }}">
+                            {% if not des.perguntas %}
+                              <div class="alert alert-light border mb-0">Sem perguntas nesta questão.</div>
+                            {% else %}
+                              <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                  <thead>
+                                    <tr class="text-center">
+                                      <th class="text-start">Enunciado</th>
+                                      <th>Correta</th>
+                                      <th style="width: 1%"></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {% for p in des.perguntas %}
+                                      <tr class="text-center">
+                                        <td class="text-start">
+                                          <div class="fw-semibold text-truncate" style="max-width: 680px;">
+                                            {{ p.enunciado }}
+                                          </div>
+                                          <div class="small text-muted">
+                                            A) {{ p.alt_a|default('')|truncate(60, True) }}
+                                            &nbsp;|&nbsp;
+                                            B) {{ p.alt_b|default('')|truncate(60, True) }}
+                                            {% if p.alt_c %}&nbsp;|&nbsp; C) {{ p.alt_c|truncate(60, True) }}{% endif %}
+                                            {% if p.alt_d %}&nbsp;|&nbsp; D) {{ p.alt_d|truncate(60, True) }}{% endif %}
+                                          </div>
+                                        </td>
+                                        <td><span class="badge text-bg-success">{{ p.correta|upper }}</span></td>
+                                        <td class="text-end">
+                                          <div class="d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                    type="button"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalEditarPergunta"
+                                                    data-id="{{ p.id }}"
+                                                    data-desafio="{{ des.id }}"
+                                                    data-enunciado="{{ p.enunciado|default('')|e }}"
+                                                    data-alta="{{ p.alt_a|default('')|e }}"
+                                                    data-altb="{{ p.alt_b|default('')|e }}"
+                                                    data-altc="{{ p.alt_c|default('')|e }}"
+                                                    data-altd="{{ p.alt_d|default('')|e }}"
+                                                    data-correta="{{ p.correta|default('a') }}">
+                                              <i class="bi bi-pencil"></i>
+                                            </button>
+
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    type="button"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalRemover"
+                                                    data-acao="delete_pergunta"
+                                                    data-id="{{ p.id }}"
+                                                    data-titulo="Remover pergunta"
+                                                    data-msg="Tem certeza que deseja remover esta pergunta?">
+                                              <i class="bi bi-trash"></i>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    {% endfor %}
+                                  </tbody>
+                                </table>
+                              </div>
+                            {% endif %}
+                          </div>
+
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+</div>
+
+
+{# ===========================
+   MODAL: Nova Questão
+   =========================== #}
+<div class="modal fade" id="modalNovoDesafio" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('atividades.index') }}" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="create_desafio">
+        <input type="hidden" name="tipo_enunciado" value="texto">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nova questão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Tópico</label>
+              <select name="topico_id" class="form-select" required>
+                <option value="">Selecione...</option>
+                {% for t in topicos_all %}
+                  <option value="{{ t.id }}">{{ t.disciplina.nome }} — {{ t.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Título</label>
+              <input type="text" name="titulo" class="form-control" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Enunciado (texto)</label>
+              <textarea name="enunciado_texto"
+                        class="form-control"
+                        rows="6"
+                        placeholder="Misture texto normal e LaTeX usando $...$ (inline) ou $$...$$ (bloco)."></textarea>
+              <div class="form-text">
+                Ex.: A área é $A=\pi r^2$ e a integral $$\int_0^1 x^2 dx$$.
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Imagem do enunciado (opcional)</label>
+              <input type="file" name="enunciado_imagem" class="form-control" accept="image/*">
+              <div class="form-text">Se não enviar, a questão fica apenas com texto.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ===========================
+   MODAL: Editar Questão
+   =========================== #}
+<div class="modal fade" id="modalEditarDesafio" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('atividades.index') }}" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="edit_desafio">
+        <input type="hidden" name="desafio_id" id="edit_desafio_id">
+        <input type="hidden" name="tipo_enunciado" value="texto">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Editar questão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Tópico</label>
+              <select name="topico_id" class="form-select" id="edit_desafio_topico" required>
+                {% for t in topicos_all %}
+                  <option value="{{ t.id }}">{{ t.disciplina.nome }} — {{ t.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Título</label>
+              <input type="text" name="titulo" class="form-control" id="edit_desafio_titulo" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Enunciado (texto)</label>
+              <textarea name="enunciado_texto" class="form-control" rows="6" id="edit_desafio_texto"></textarea>
+              <div class="form-text">Use $...$ ou $$...$$ para LaTeX.</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Trocar imagem do enunciado (opcional)</label>
+              <input type="file" name="enunciado_imagem" class="form-control" accept="image/*">
+
+              <div id="edit_desafio_img_preview_wrap" class="mt-2" style="display:none;">
+                <div class="small text-muted mb-1">Imagem atual:</div>
+                <img id="edit_desafio_img_preview" class="img-fluid rounded border" alt="Imagem atual">
+              </div>
+
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" value="1" id="edit_desafio_remove_img" name="remover_imagem">
+                <label class="form-check-label" for="edit_desafio_remove_img">
+                  Remover imagem atual
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ===========================
+   MODAL: Nova Pergunta
+   =========================== #}
+<div class="modal fade" id="modalNovaPergunta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('atividades.index') }}">
+        <input type="hidden" name="action" value="create_pergunta">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nova pergunta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label">Questão</label>
+              <select class="form-select" name="desafio_id" id="nova_pergunta_desafio" required>
+                {% for d in desafios_all %}
+                  <option value="{{ d.id }}">{{ d.topico.disciplina.nome }} — {{ d.topico.nome }} — {{ d.titulo }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Enunciado</label>
+              <textarea class="form-control" rows="3" name="enunciado" required></textarea>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa A</label>
+              <input class="form-control" name="alt_a" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa B</label>
+              <input class="form-control" name="alt_b" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa C</label>
+              <input class="form-control" name="alt_c">
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa D</label>
+              <input class="form-control" name="alt_d">
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label">Correta</label>
+              <select class="form-select" name="correta" required>
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ===========================
+   MODAL: Editar Pergunta
+   =========================== #}
+<div class="modal fade" id="modalEditarPergunta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('atividades.index') }}">
+        <input type="hidden" name="action" value="edit_pergunta">
+        <input type="hidden" name="pergunta_id" id="edit_pergunta_id">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Editar pergunta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label">Questão</label>
+              <select class="form-select" name="desafio_id" id="edit_pergunta_desafio" required>
+                {% for d in desafios_all %}
+                  <option value="{{ d.id }}">{{ d.topico.disciplina.nome }} — {{ d.topico.nome }} — {{ d.titulo }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Enunciado</label>
+              <textarea class="form-control" rows="3" name="enunciado" id="edit_pergunta_enunciado" required></textarea>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa A</label>
+              <input class="form-control" name="alt_a" id="edit_pergunta_alta" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa B</label>
+              <input class="form-control" name="alt_b" id="edit_pergunta_altb" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa C</label>
+              <input class="form-control" name="alt_c" id="edit_pergunta_altc">
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Alternativa D</label>
+              <input class="form-control" name="alt_d" id="edit_pergunta_altd">
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label">Correta</label>
+              <select class="form-select" name="correta" id="edit_pergunta_correta" required>
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ===========================
+   MODAL: Remover (genérico)
+   =========================== #}
+<div class="modal fade" id="modalRemover" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('atividades.index') }}">
+        <input type="hidden" name="action" id="rem_action">
+        <input type="hidden" name="id" id="rem_id">
+        <div class="modal-header">
+          <h5 class="modal-title" id="rem_title">Remover</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="rem_msg" class="text-muted"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" type="submit">Remover</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // Modal remover
+  const modalRemover = document.getElementById('modalRemover');
+  if (modalRemover) {
+    modalRemover.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      document.getElementById('rem_action').value = btn.getAttribute('data-acao') || '';
+      document.getElementById('rem_id').value = btn.getAttribute('data-id') || '';
+      document.getElementById('rem_title').textContent = btn.getAttribute('data-titulo') || 'Remover';
+      document.getElementById('rem_msg').textContent = btn.getAttribute('data-msg') || 'Confirma?';
+    });
+  }
+
+  // Modal editar questão + preview de imagem + checkbox remover
+  const modalEditarDesafio = document.getElementById('modalEditarDesafio');
+  if (modalEditarDesafio) {
+    modalEditarDesafio.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+
+      document.getElementById('edit_desafio_id').value = btn.getAttribute('data-id') || '';
+      document.getElementById('edit_desafio_topico').value = btn.getAttribute('data-topico') || '';
+      document.getElementById('edit_desafio_titulo').value = btn.getAttribute('data-titulo') || '';
+      document.getElementById('edit_desafio_texto').value = btn.getAttribute('data-texto') || '';
+
+      const imgRaw = (btn.getAttribute('data-img') || '').trim();
+      const imgLower = imgRaw.toLowerCase();
+      const isEmpty = (!imgRaw || imgLower === 'none' || imgLower === 'null');
+
+      const wrap = document.getElementById('edit_desafio_img_preview_wrap');
+      const imgEl = document.getElementById('edit_desafio_img_preview');
+      const chk = document.getElementById('edit_desafio_remove_img');
+
+      if (chk) chk.checked = false;
+
+      if (!wrap || !imgEl) return;
+
+      if (isEmpty) {
+        wrap.style.display = 'none';
+        imgEl.removeAttribute('src');
+        return;
+      }
+
+        let url = imgRaw;
+
+        if (!(imgRaw.startsWith('http://') || imgRaw.startsWith('https://'))) {
+          const clean = imgRaw.replace(/^\/+/, '');
+          // se já vier com uploads/enunciados, não duplica
+          url = clean.includes('uploads/enunciados/')
+            ? `/static/${clean}`
+            : `/static/uploads/enunciados/${clean}`;
+        }
+
+      
+      wrap.style.display = 'block';
+      imgEl.src = url;
+    });
+  }
+
+  // Modal nova pergunta: se clicou no botão da questão, já pré-seleciona
+  const modalNovaPergunta = document.getElementById('modalNovaPergunta');
+  if (modalNovaPergunta) {
+    modalNovaPergunta.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      const des = btn?.getAttribute?.('data-desafio');
+      if (des) document.getElementById('nova_pergunta_desafio').value = des;
+    });
+  }
+
+  // Modal editar pergunta
+  const modalEditarPergunta = document.getElementById('modalEditarPergunta');
+  if (modalEditarPergunta) {
+    modalEditarPergunta.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      document.getElementById('edit_pergunta_id').value = btn.getAttribute('data-id') || '';
+      document.getElementById('edit_pergunta_desafio').value = btn.getAttribute('data-desafio') || '';
+      document.getElementById('edit_pergunta_enunciado').value = btn.getAttribute('data-enunciado') || '';
+      document.getElementById('edit_pergunta_alta').value = btn.getAttribute('data-alta') || '';
+      document.getElementById('edit_pergunta_altb').value = btn.getAttribute('data-altb') || '';
+      document.getElementById('edit_pergunta_altc').value = btn.getAttribute('data-altc') || '';
+      document.getElementById('edit_pergunta_altd').value = btn.getAttribute('data-altd') || '';
+      document.getElementById('edit_pergunta_correta').value = btn.getAttribute('data-correta') || 'a';
+    });
+  }
+</script>
+{% endblock %}

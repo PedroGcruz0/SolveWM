@@ -1,0 +1,28 @@
+{% extends "modelo.html" %}
+{% block title %}Entrar - Solve WM{% endblock %}
+
+{% block content %}
+<div class="mx-auto" style="max-width:520px;">
+  <h2 class="fw-bold mb-3">Entrar</h2>
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.email.label(class="form-label") }}
+      {{ form.email(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.senha.label(class="form-label") }}
+      {{ form.senha(class="form-control") }}
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.lembrar(class="form-check-input") }}
+      {{ form.lembrar.label(class="form-check-label") }}
+    </div>
+
+    {{ form.enviar(class="btn btn-primary w-100") }}
+  </form>
+</div>
+{% endblock %}

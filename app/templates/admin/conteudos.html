@@ -1,0 +1,288 @@
+{# app/templates/admin/conteudos.html #}
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-1">Conteúdos</h2>
+      <div class="text-muted">Gerencie disciplinas e tópicos com ações rápidas.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaDisciplina">
+        <i class="bi bi-plus-circle"></i> Nova disciplina
+      </button>
+
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoTopico">
+        <i class="bi bi-plus"></i> Novo tópico
+      </button>
+    </div>
+  </div>
+
+  {% if not disciplinas_cards %}
+    <div class="alert alert-warning">Nenhuma disciplina cadastrada ainda.</div>
+  {% else %}
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label mb-1">Buscar</label>
+      <input id="searchBox" class="form-control" placeholder="Digite nome da disciplina ou do tópico..." />
+      <div class="text-muted small mt-2">
+        Dica: “Ver tópicos” expande a lista sem lotar a tela.
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-3" id="grid">
+    {% for d in disciplinas_cards %}
+    <div class="col disc-card" data-filter="{{ (d.nome ~ ' ' ~ d.descricao ~ ' ' ~ (d.topicos|map(attribute='nome')|join(' ')))|lower }}">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+
+          <div class="d-flex align-items-start justify-content-between gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-journal-bookmark fs-5 text-primary"></i>
+                <h5 class="mb-0">{{ d.nome }}</h5>
+              </div>
+              <div class="text-muted mt-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                {{ d.descricao if d.descricao else "Sem descrição" }}
+              </div>
+            </div>
+
+            <span class="badge text-bg-primary">Tópicos: {{ d.n_topicos }}</span>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a class="btn btn-outline-primary btn-sm"
+               href="/admin/disciplina/edit/?id={{ d.id }}&url=/admin/conteudos">
+              <i class="bi bi-pencil-square"></i> Editar
+            </a>
+
+            <button class="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#top{{ d.id }}">
+              <i class="bi bi-list-ul"></i> Ver tópicos
+            </button>
+
+
+            <button class="btn btn-outline-danger btn-sm"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalDelDisc{{ d.id }}">
+              <i class="bi bi-trash"></i> Remover
+            </button>
+          </div>
+
+          <div class="collapse mt-3" id="top{{ d.id }}">
+            <div class="border rounded-3 p-2 bg-light">
+              {% if not d.topicos %}
+                <div class="text-muted small">Sem tópicos nesta disciplina.</div>
+              {% else %}
+                <div class="list-group list-group-flush">
+                  {% for t in d.topicos %}
+                    <div class="list-group-item bg-transparent px-0">
+                      <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div>
+                          <div class="fw-semibold">{{ t.nome }}</div>
+                          {% if t.descricao %}
+                            <div class="text-muted small" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">
+                              {{ t.descricao }}
+                            </div>
+                          {% endif %}
+
+                          <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge text-bg-secondary">Desafios: {{ t.n_desafios }}</span>
+                            <span class="badge text-bg-dark">Perguntas: {{ t.n_perguntas }}</span>
+                          </div>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2">
+                          <a class="btn btn-outline-primary btn-sm"
+                             href="/admin/topico/edit/?id={{ t.id }}&url=/admin/conteudos">
+                            <i class="bi bi-pencil"></i> Editar
+                          </a>
+
+                          <a class="btn btn-outline-secondary btn-sm"
+                             href="/admin/desafio/new/?topico_id={{ t.id }}&url=/admin/conteudos">
+                            <i class="bi bi-plus"></i> Novo desafio
+                          </a>
+
+                          <button class="btn btn-outline-danger btn-sm"
+                                  type="button"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#modalDelTop{{ t.id }}">
+                            <i class="bi bi-trash"></i> Remover
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {# Modal remover tópico #}
+                    <div class="modal fade" id="modalDelTop{{ t.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">Remover tópico</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="fw-semibold">{{ t.nome }}</div>
+                            <div class="text-muted">
+                              Isso removerá também os desafios e perguntas dentro deste tópico.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form method="post" action="{{ url_for('conteudos.index') }}">
+                              <input type="hidden" name="action" value="delete_topico">
+                              <input type="hidden" name="topico_id" value="{{ t.id }}">
+                              <button class="btn btn-danger" type="submit">
+                                <i class="bi bi-trash"></i> Remover
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# Modal remover disciplina #}
+    <div class="modal fade" id="modalDelDisc{{ d.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Remover disciplina</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="fw-semibold">{{ d.nome }}</div>
+            <div class="text-muted">
+              Isso removerá também os tópicos, desafios e perguntas desta disciplina e a desvinculará das turmas.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <form method="post" action="{{ url_for('conteudos.index') }}">
+              <input type="hidden" name="action" value="delete_disciplina">
+              <input type="hidden" name="disciplina_id" value="{{ d.id }}">
+              <button class="btn btn-danger" type="submit">
+                <i class="bi bi-trash"></i> Remover
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% endfor %}
+  </div>
+
+  <script>
+    // Busca
+    (function () {
+      const input = document.getElementById('searchBox');
+      const cards = document.querySelectorAll('.disc-card');
+      if (!input) return;
+
+      input.addEventListener('input', () => {
+        const q = (input.value || '').toLowerCase().trim();
+        cards.forEach((c) => {
+          const hay = (c.getAttribute('data-filter') || '');
+          c.style.display = hay.includes(q) ? '' : 'none';
+        });
+      });
+    })();
+
+    // Preenche disciplina no modal de novo tópico
+    (function () {
+      const modal = document.getElementById('modalNovoTopico');
+      if (!modal) return;
+
+      modal.addEventListener('show.bs.modal', (ev) => {
+        const btn = ev.relatedTarget;
+        const disc = btn ? btn.getAttribute('data-disciplina') : null;
+        if (!disc) return;
+
+        const select = modal.querySelector('select[name="disciplina_id"]');
+        if (select) select.value = disc;
+      });
+    })();
+  </script>
+
+  {% endif %}
+
+</div>
+
+{# Modal nova disciplina #}
+<div class="modal fade" id="modalNovaDisciplina" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('conteudos.index') }}">
+      <input type="hidden" name="action" value="create_disciplina">
+      <div class="modal-header">
+        <h5 class="modal-title">Nova disciplina</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Nome</label>
+        <input class="form-control" name="nome" required>
+
+        <label class="form-label mt-3">Descrição</label>
+        <textarea class="form-control" name="descricao" rows="3"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-check2"></i> Criar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Modal novo tópico #}
+<div class="modal fade" id="modalNovoTopico" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('conteudos.index') }}">
+      <input type="hidden" name="action" value="create_topico">
+      <div class="modal-header">
+        <h5 class="modal-title">Novo tópico</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Disciplina</label>
+        <select class="form-select" name="disciplina_id" required>
+          <option value="">Selecione...</option>
+          {% for d in disciplinas_dropdown %}
+            <option value="{{ d.id }}">{{ d.nome }}</option>
+          {% endfor %}
+        </select>
+
+        <label class="form-label mt-3">Nome do tópico</label>
+        <input class="form-control" name="nome" required>
+
+        <label class="form-label mt-3">Descrição</label>
+        <textarea class="form-control" name="descricao" rows="3"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-check2"></i> Criar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

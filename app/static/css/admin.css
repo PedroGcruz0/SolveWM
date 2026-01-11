@@ -1,0 +1,10 @@
+body { background:#f6f8fb; }
+.container-fluid { max-width: 1400px; }
+
+.card {
+  border-radius: 14px;
+  border: 1px solid #e7edf5;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+
+.table { background:#fff; }

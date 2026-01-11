@@ -1,0 +1,142 @@
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid py-3">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-0">Alunos</h2>
+      <div class="text-muted">Crie alunos e matricule em múltiplas turmas.</div>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoAluno">
+      <i class="bi bi-person-plus"></i> Novo aluno
+    </button>
+  </div>
+
+  <form class="row g-2 mb-3" method="get" action="{{ url_for('alunos.index') }}">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por nome ou e-mail">
+      </div>
+    </div>
+    <div class="col-12 col-md-auto">
+      <button class="btn btn-outline-primary" type="submit">Buscar</button>
+      {% if q %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('alunos.index') }}">Limpar</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <div class="row g-3">
+    {% for a in alunos_cards %}
+      <div class="col-12 col-lg-6 col-xxl-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div>
+                <h5 class="mb-1">{{ a.nome }}</h5>
+                <div class="text-muted small">{{ a.email }}</div>
+              </div>
+
+              <button class="btn btn-sm btn-primary"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalMatricular"
+                      data-aluno-id="{{ a.id }}"
+                      data-aluno-nome="{{ a.nome }}">
+                <i class="bi bi-plus-circle"></i> Matricular
+              </button>
+            </div>
+
+            <div class="mt-3">
+              <div class="fw-semibold mb-2">Turmas</div>
+              {% if a.turmas %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for t in a.turmas %}
+                    <span class="badge text-bg-light border">{{ t.nome }}</span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="text-muted">Sem matrícula.</div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+
+{# Modal: Novo Aluno #}
+<div class="modal fade" id="modalNovoAluno" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ url_for('alunos.index') }}">
+      <input type="hidden" name="action" value="create_aluno">
+      <div class="modal-header">
+        <h5 class="modal-title">Novo aluno</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label">Nome</label>
+          <input class="form-control" name="nome" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">E-mail</label>
+          <input class="form-control" name="email" type="email" required>
+        </div>
+        <div>
+          <label class="form-label">Senha</label>
+          <input class="form-control" name="senha" type="password" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Criar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{# Modal: Matricular em Turmas (multi) #}
+<div class="modal fade" id="modalMatricular" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ url_for('alunos.index') }}">
+      <input type="hidden" name="action" value="matricular_em_turmas">
+      <input type="hidden" name="usuario_id" id="matAlunoId">
+      <div class="modal-header">
+        <h5 class="modal-title">Matricular — <span id="matAlunoNome"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-muted mb-2">
+          Selecione uma ou várias turmas. O aluno pode estar em múltiplas turmas.
+        </div>
+        <select class="form-select" name="turma_ids" multiple size="10">
+          {% for t in turmas %}
+            <option value="{{ t.id }}">{{ t.nome }} ({{ t.codigo }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalMat = document.getElementById('modalMatricular');
+  modalMat?.addEventListener('show.bs.modal', (ev) => {
+    const btn = ev.relatedTarget;
+    document.getElementById('matAlunoId').value = btn.getAttribute('data-aluno-id');
+    document.getElementById('matAlunoNome').textContent = btn.getAttribute('data-aluno-nome');
+  });
+</script>
+{% endblock %}

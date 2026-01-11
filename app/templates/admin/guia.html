@@ -1,0 +1,20 @@
+{% extends 'admin/my_master.html' %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-body">
+      <h3 class="mb-3">Fluxo recomendado para cadastrar desafios</h3>
+
+      <ol class="mb-0">
+        <li class="mb-2"><strong>Cadastre uma Disciplina</strong> (ex.: Cálculo I).</li>
+        <li class="mb-2"><strong>Cadastre Tópicos</strong> dentro da disciplina (ex.: Regra da cadeia, Integração por substituição).</li>
+        <li class="mb-2"><strong>Crie uma Turma</strong> e selecione as <strong>Disciplinas</strong> daquela turma.</li>
+        <li class="mb-2"><strong>Cadastre Desafios</strong> escolhendo o <strong>Tópico</strong> e o tipo de enunciado: Texto / LaTeX / Imagem.</li>
+        <li class="mb-2"><strong>Cadastre Perguntas</strong> do desafio (passos) com alternativas que podem ser <strong>texto ou LaTeX</strong>.</li>
+        <li class="mb-2">Abra <strong>Análise</strong> e execute por turma para ver taxas de erro por tópico.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

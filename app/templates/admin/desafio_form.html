@@ -1,0 +1,12 @@
+{% extends 'admin/model/edit.html' %}
+
+{% block body %}
+  <div class="container-fluid mt-3">
+    <div class="alert alert-info">
+      <strong>Como cadastrar o enunciado:</strong><br>
+      Escreva texto normal e, quando quiser LaTeX, use <strong>$$ ... $$</strong> ou <strong>\( ... \)</strong>.<br>
+      Você pode adicionar <strong>texto + imagem</strong> no mesmo desafio.
+    </div>
+    {{ super() }}
+  </div>
+{% endblock %}

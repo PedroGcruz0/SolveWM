@@ -2,79 +2,293 @@
 
 {% block body %}
 <div class="container-fluid">
-  <div class="d-flex align-items-center justify-content-between mb-3">
+
+  {# =========================
+     Cabeçalho do Painel (guia)
+     ========================= #}
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
     <div>
-      <h3 class="mb-0">Painel do Administrador</h3>
-      <div class="text-muted">Gerencie turmas, conteúdo e relatórios</div>
+      <h3 class="mb-0">Painel</h3>
+      <div class="text-muted">
+        Use este passo a passo para configurar turmas, conteúdo e questões que aparecerão no Tutor.
+      </div>
     </div>
-    <div class="d-flex gap-2">
-      <a class="btn btn-outline-primary" href="/admin/conteudos">Conteúdos</a>
-      <a class="btn btn-primary" href="/admin/turma/new/">Nova Turma</a>
+
+    {# Próxima ação (sugestão automática) #}
+    {% set total_disciplinas = total_disciplinas|default(0) %}
+    {% set total_topicos = total_topicos|default(0) %}
+    {% set total_perguntas = total_perguntas|default(0) %}
+    {% set desafios_sem_perguntas = desafios_sem_perguntas|default(0) %}
+    {% set turmas_sem_disciplinas = turmas_sem_disciplinas|default(0) %}
+
+    {% set next_href = "/admin/conteudos" %}
+    {% set next_label = "Abrir Conteúdos" %}
+    {% set next_help = "Crie disciplinas e tópicos para organizar suas questões." %}
+
+    {% if total_turmas|default(0) == 0 %}
+      {% set next_href = "/admin/turmas/" %}
+      {% set next_label = "Criar a primeira turma" %}
+      {% set next_help = "Turmas permitem vincular disciplinas e matricular alunos." %}
+    {% elif turmas_sem_disciplinas > 0 %}
+      {% set next_href = "/admin/turmas/" %}
+      {% set next_label = "Vincular disciplinas na turma" %}
+      {% set next_help = "Uma turma precisa ter disciplinas vinculadas para organizar o conteúdo." %}
+    {% elif total_disciplinas == 0 %}
+      {% set next_href = "/admin/conteudos" %}
+      {% set next_label = "Criar disciplina" %}
+      {% set next_help = "Disciplinas organizam tópicos e questões." %}
+    {% elif total_topicos == 0 %}
+      {% set next_href = "/admin/conteudos" %}
+      {% set next_label = "Criar tópico" %}
+      {% set next_help = "Tópicos organizam as questões por assunto." %}
+    {% elif total_desafios|default(0) == 0 %}
+      {% set next_href = "/admin/atividades" %}
+      {% set next_label = "Criar a primeira questão" %}
+      {% set next_help = "Questões (desafios) são exibidas no Tutor quando possuem perguntas." %}
+    {% elif desafios_sem_perguntas > 0 %}
+      {% set next_href = "/admin/atividades" %}
+      {% set next_label = "Adicionar perguntas às questões" %}
+      {% set next_help = "Questão sem perguntas é ignorada no Tutor." %}
+    {% elif total_alunos|default(0) == 0 %}
+      {% set next_href = "/admin/turmas/" %}
+      {% set next_label = "Matricular alunos" %}
+      {% set next_help = "Matricule alunos nas turmas para começar a usar o Tutor." %}
+    {% else %}
+      {% set next_href = "/admin/analise" %}
+      {% set next_label = "Abrir relatórios" %}
+      {% set next_help = "Acompanhe respostas e progresso dos alunos." %}
+    {% endif %}
+
+    <div class="d-flex flex-column align-items-end">
+      <a class="btn btn-primary" href="{{ next_href }}">{{ next_label }}</a>
+      <div class="text-muted small mt-1" style="max-width: 420px; text-align: right;">
+        {{ next_help }}
+      </div>
     </div>
   </div>
 
+  {# =========================
+     Resumo 
+     ========================= #}
   <div class="row g-3">
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-body">
           <div class="text-muted">Turmas</div>
           <div class="display-6 fw-bold">{{ total_turmas }}</div>
-          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/turma/">Gerenciar</a>
+          <div class="text-muted small">
+            {% if total_turmas|default(0) == 0 %}
+              Crie uma turma para começar.
+            {% elif turmas_sem_disciplinas > 0 %}
+              Há turma(s) sem disciplinas vinculadas.
+            {% else %}
+              Turmas prontas para receber alunos e disciplinas.
+            {% endif %}
+          </div>
+          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/turmas/">Gerenciar turmas</a>
         </div>
       </div>
     </div>
 
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-body">
           <div class="text-muted">Alunos</div>
           <div class="display-6 fw-bold">{{ total_alunos }}</div>
-          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/matricula/">Adicionar aluno</a>
+          <div class="text-muted small">
+            Matricule alunos nas turmas para liberar acesso ao Tutor.
+          </div>
+          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/turmas/">Matricular alunos</a>
         </div>
       </div>
     </div>
 
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-body">
-          <div class="text-muted">Desafios</div>
+          <div class="text-muted">Questões</div>
           <div class="display-6 fw-bold">{{ total_desafios }}</div>
-          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/desafio/">Gerenciar</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-1">
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <div class="fw-bold mb-2">Fluxo recomendado (professor)</div>
-          <ol class="mb-0">
-            <li>Criar disciplina</li>
-            <li>Criar tópicos dentro da disciplina</li>
-            <li>Criar desafio dentro do tópico</li>
-            <li>Criar perguntas (passos) do desafio</li>
-            <li>Vincular disciplina à turma</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-body">
-          <div class="fw-bold mb-2">Ações rápidas</div>
-          <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-primary" href="/admin/disciplina/new/">Nova disciplina</a>
-            <a class="btn btn-outline-primary" href="/admin/topico/new/">Novo tópico</a>
-            <a class="btn btn-outline-primary" href="/admin/desafio/new/">Novo desafio</a>
-            <a class="btn btn-outline-primary" href="/admin/pergunta/new/">Nova pergunta</a>
-            <a class="btn btn-outline-primary" href="/admin/analise">Análise</a>
+          <div class="text-muted small">
+            {% if desafios_sem_perguntas > 0 %}
+              Existe(m) {{ desafios_sem_perguntas }} questão(ões) sem perguntas (não aparecem no Tutor).
+            {% else %}
+              Questões prontas devem ter perguntas cadastradas.
+            {% endif %}
           </div>
+          <a class="btn btn-sm btn-outline-primary mt-2" href="/admin/atividades">Gerenciar questões</a>
         </div>
       </div>
     </div>
   </div>
+
+  {# =========================
+     Guia de uso
+     ========================= #}
+  <div class="row g-3 mt-1">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body">
+          <div class="fw-bold mb-2">Fluxo de configuração recomendado</div>
+
+          {# Stepper simples (não depende de biblioteca) #}
+          <div class="border rounded p-3">
+            <div class="d-flex flex-column gap-2">
+
+              {% set s1_ok = (total_turmas|default(0) > 0) %}
+              {% set s2_ok = (turmas_sem_disciplinas|default(0) == 0 and total_turmas|default(0) > 0) %}
+              {% set s3_ok = (total_disciplinas > 0 and total_topicos > 0) %}
+              {% set s4_ok = (total_desafios|default(0) > 0) %}
+              {% set s5_ok = (total_perguntas > 0 and desafios_sem_perguntas == 0) %}
+              {% set s6_ok = (total_alunos|default(0) > 0) %}
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">1. Criar turma</div>
+                  <div class="text-muted small">A turma organiza alunos e define quais disciplinas aparecerão.</div>
+                </div>
+                <div class="text-end">
+                  {% if s1_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/turmas/">Ir para Turmas</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">2. Vincular disciplinas à turma</div>
+                  <div class="text-muted small">Sem disciplinas vinculadas, o conteúdo não fica organizado por turma.</div>
+                </div>
+                <div class="text-end">
+                  {% if s2_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/turmas/">Vincular</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">3. Criar conteúdo (disciplinas e tópicos)</div>
+                  <div class="text-muted small">Use Conteúdos para criar disciplinas e tópicos (assuntos).</div>
+                </div>
+                <div class="text-end">
+                  {% if s3_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/conteudos">Ir para Conteúdos</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">4. Criar questão</div>
+                  <div class="text-muted small">A questão pode ter enunciado em texto e/ou imagem.</div>
+                </div>
+                <div class="text-end">
+                  {% if s4_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/atividades">Ir para Atividades</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">5. Adicionar perguntas (alternativas)</div>
+                  <div class="text-muted small">
+                    Somente questões com perguntas aparecem no Tutor. Questões sem perguntas são ignoradas.
+                  </div>
+                </div>
+                <div class="text-end">
+                  {% if s5_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/atividades">Adicionar perguntas</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <div class="fw-semibold">6. Matricular alunos</div>
+                  <div class="text-muted small">Matricule alunos na turma para que eles vejam o Tutor e respondam.</div>
+                </div>
+                <div class="text-end">
+                  {% if s6_ok %}
+                    <span class="badge text-bg-success">Concluído</span>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/turmas/">Matricular</a>
+                  {% endif %}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="mt-3 text-muted small">
+            Observação: quando você cadastrar LaTeX, use $...$ (inline) ou $$...$$ (bloco). Isso vale para enunciado e alternativas.
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# =========================
+       Ações rápidas 
+       ========================= #}
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <div class="fw-bold mb-2">Atalhos por tarefa</div>
+
+          <div class="vstack gap-2">
+            <a class="btn btn-outline-primary" href="/admin/turmas/">
+              Turmas (criar, vincular disciplinas, matricular alunos)
+            </a>
+            <a class="btn btn-outline-primary" href="/admin/conteudos">
+              Conteúdos (disciplinas e tópicos)
+            </a>
+            <a class="btn btn-outline-primary" href="/admin/atividades">
+              Atividades (questões e perguntas)
+            </a>
+            <a class="btn btn-outline-primary" href="/admin/analise">
+              Relatórios (acompanhamento)
+            </a>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="fw-semibold mb-2">Regras que evitam problemas no Tutor</div>
+          <ul class="mb-0 text-muted small">
+            <li>Questão sem perguntas não aparece para o aluno.</li>
+            <li>Disciplina deve estar vinculada à turma para manter o conteúdo organizado.</li>
+            <li>Em enunciado e alternativas, use LaTeX apenas entre $...$ ou $$...$$.</li>
+          </ul>
+        </div>
+      </div>
+
+      {% if desafios_sem_perguntas > 0 %}
+        <div class="alert alert-warning mt-3 mb-0">
+          Há {{ desafios_sem_perguntas }} questão(ões) sem perguntas. Elas serão ignoradas no Tutor até você adicionar perguntas.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
 {% endblock %}

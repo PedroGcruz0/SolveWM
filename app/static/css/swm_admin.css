@@ -1,0 +1,85 @@
+.swm-logo {
+  height: 34px;
+  width: auto;
+}
+
+.swm-bubbles {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.swm-bubble {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: #fff;
+  text-decoration: none;
+  min-width: 220px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  transition: transform .08s ease, box-shadow .08s ease;
+  color: inherit;
+}
+
+.swm-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.08);
+}
+
+.swm-bubble.active {
+  border-color: rgba(13,110,253,.35);
+  box-shadow: 0 10px 24px rgba(13,110,253,.12);
+}
+
+.swm-img {
+  max-height: 320px;   /* limite do tamanho */
+  width: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: #fafafa;
+  padding: 8px;
+}
+
+.swm-pre {
+  background: #0b1220;
+  color: #e5e7eb;
+  padding: 12px 14px;
+  border-radius: 12px;
+  overflow: auto;
+  font-size: .9rem;
+  margin: 0;
+}
+
+.swm-text {
+  font-size: .98rem;
+  line-height: 1.45;
+}
+
+.swm-alt {
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.swm-alt.correct {
+  border-color: rgba(25,135,84,.35);
+  background: rgba(25,135,84,.06);
+}
+
+.swm-alt-text {
+  max-width: 760px;      /* evita ficar gigante */
+  font-size: .95rem;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swm-code {
+  display: inline-block;
+  font-size: .9rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
