@@ -236,7 +236,7 @@
   MODAL: Disciplinas (multi-select)
 ========================== #}
 <div class="modal fade" id="modalDisciplinas" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">  
     <div class="modal-content">
       <form method="post" action="{{ url_for('turmas.index') }}">
         <input type="hidden" name="action" value="set_disciplinas">
@@ -249,8 +249,7 @@
 
         <div class="modal-body">
           <input class="form-control mb-2" id="discFilter" placeholder="Buscar disciplina...">
-
-          <div class="border rounded p-2" style="max-height: 420px; overflow:auto;">
+          <div class="border rounded p-2 picklist-scroll">
             <div class="vstack gap-2" id="discList">
               {% for d in disciplinas %}
                 <label class="d-flex align-items-center justify-content-between border rounded px-2 py-2 disc-item">
@@ -292,8 +291,7 @@
 
         <div class="modal-body">
           <input class="form-control mb-2" id="alFilter" placeholder="Buscar aluno por nome ou e-mail...">
-
-          <div class="border rounded p-2" style="max-height: 420px; overflow:auto;">
+          <div class="border rounded p-2 picklist-scroll">
             <div class="vstack gap-2" id="alList">
               {% for a in alunos %}
                 <label class="d-flex align-items-center justify-content-between border rounded px-2 py-2 al-item">
@@ -325,7 +323,7 @@
   MODAL: Remover turma
 ========================== #}
 <div class="modal fade" id="modalRemoverTurma" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down">
     <div class="modal-content">
       <form method="post" action="{{ url_for('turmas.index') }}">
         <input type="hidden" name="action" value="delete_turma">

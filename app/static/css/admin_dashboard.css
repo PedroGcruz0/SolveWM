@@ -74,7 +74,6 @@
 .sidebar-collapsed .nav-item{ justify-content:center; }
 .sidebar-collapsed .brand-link{ justify-content:center; }
 
-/* --- Análise: tabela escalável --- */
 .admin-table-wrap{
   overflow: auto;
   max-height: 70vh; /* evita página gigante quando houver muitos alunos */
@@ -98,7 +97,6 @@
   box-shadow: 1px 0 0 rgba(0,0,0,.06);
 }
 
-/* Ajuste de larguras pra não “dançar” */
 .admin-analise-table .sticky-col-1{ left: 0; min-width: 240px; }
 .admin-analise-table .sticky-col-2{ left: 240px; min-width: 110px; }
 .admin-analise-table .sticky-col-3{ left: 350px; min-width: 90px; }
@@ -114,16 +112,13 @@
   height: 320px;
 }
 
-/* ===== Sidebar responsiva + colapsável ===== */
 
 :root{
   --swm-sidebar-w: 260px;
   --swm-sidebar-w-collapsed: 78px;
 }
 
-/* garanta que seu layout use algo assim:
-   .swm-sidebar + área principal ao lado.
-   Se você usa grid/flex, isso vai funcionar melhor. */
+
 
 .swm-sidebar{
   width: var(--swm-sidebar-w);
@@ -135,7 +130,6 @@ body.swm-sidebar-collapsed .swm-sidebar{
   width: var(--swm-sidebar-w-collapsed);
 }
 
-/* esconda textos do menu no colapsado (ajuste classes conforme seu HTML) */
 body.swm-sidebar-collapsed .swm-sidebar .swm-brand-text,
 body.swm-sidebar-collapsed .swm-sidebar .nav-label,
 body.swm-sidebar-collapsed .swm-sidebar .nav-text{
@@ -160,7 +154,6 @@ body.swm-sidebar-collapsed .swm-sidebar .nav-text{
   line-height: 1;
 }
 
-/* ===== Mobile: sidebar vira offcanvas ===== */
 .swm-sidebar-overlay{
   display:none;
 }
@@ -191,4 +184,57 @@ body.swm-sidebar-collapsed .swm-sidebar .nav-text{
   body.swm-sidebar-open .swm-sidebar-overlay{
     display:block;
   }
+}
+
+.modal-dialog {
+  max-width: min(980px, calc(100vw - 1.5rem));
+  margin: .75rem auto;
+}
+
+.modal-content {
+  max-height: calc(100vh - 1.5rem);
+}
+
+.modal-body {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Em iOS moderno, 100dvh é melhor */
+@supports (height: 100dvh) {
+  .modal-content { max-height: calc(100dvh - 1.5rem); }
+}
+
+/* listas grandes dentro do modal (alunos/disciplinas) */
+.picklist-scroll {
+  max-height: 55vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#modalAlunos .al-item,
+#modalDisciplinas .disc-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+#modalAlunos .al-item .form-check-input,
+#modalDisciplinas .disc-item .form-check-input{
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  float: none !important;
+  margin: 0 !important;
+  flex: 0 0 auto;
+}
+
+.modal-dialog-scrollable .modal-content{
+  max-height: calc(100vh - 2rem);
+}
+
+.modal-dialog-scrollable .modal-body{
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

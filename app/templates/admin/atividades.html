@@ -247,7 +247,7 @@
    MODAL: Nova Questão
    =========================== #}
 <div class="modal fade" id="modalNovoDesafio" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
     <div class="modal-content">
       <form method="post" action="{{ url_for('atividades.index') }}" enctype="multipart/form-data">
         <input type="hidden" name="action" value="create_desafio">
@@ -585,10 +585,17 @@
         return;
       }
 
-      const url = (imgRaw.startsWith('http://') || imgRaw.startsWith('https://'))
-        ? imgRaw
-        : (`/static/${imgRaw.replace(/^\/+/, '')}`);
+        let url = imgRaw;
 
+        if (!(imgRaw.startsWith('http://') || imgRaw.startsWith('https://'))) {
+          const clean = imgRaw.replace(/^\/+/, '');
+          // se já vier com uploads/enunciados, não duplica
+          url = clean.includes('uploads/enunciados/')
+            ? `/static/${clean}`
+            : `/static/uploads/enunciados/${clean}`;
+        }
+
+      
       wrap.style.display = 'block';
       imgEl.src = url;
     });

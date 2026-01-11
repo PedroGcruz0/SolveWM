@@ -15,7 +15,7 @@ from .modelos import db, Usuario, Turma, Matricula, Topico, TentativaDesafio, In
 
 
 # =========================
-# Acesso Admin (sem circular import)
+# Acesso Admin 
 # =========================
 class AdminAccessMixin:
     def is_accessible(self):
@@ -26,7 +26,7 @@ class AdminAccessMixin:
 
 
 # =========================
-# K-means simples (sem sklearn)
+# K-means simples 
 # =========================
 def _kmeans_simple(X: List[List[float]], k: int, iters: int = 60, seed: int = 42) -> List[int]:
     n = len(X)
@@ -185,7 +185,7 @@ def _build_kmeans_por_turma(turma_id: int, k: int) -> dict:
 
     topics = Topico.query.filter(Topico.id.in_(topic_ids)).all()
     topic_name_by_id = {t.id: t.nome for t in topics}
-    # ordem do gráfico por nome (fica “bonito”)
+    # ordem do gráfico por nome
     topic_ids_ord = sorted(topic_ids, key=lambda tid: (topic_name_by_id.get(tid, f"Tópico {tid}")).lower())
     topic_labels = [topic_name_by_id.get(tid, f"Tópico {tid}") for tid in topic_ids_ord]
 

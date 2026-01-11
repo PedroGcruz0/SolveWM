@@ -258,7 +258,7 @@
     const donutTurma = {{ (donut_turma or {"acertos": 0, "erros": 0, "total": 0}) | tojson }};
     const donutAluno = {{ (donut_aluno or {"acertos": 0, "erros": 0, "total": 0}) | tojson }};
 
-    // Gráfico principal (bar)
+    // Gráfico principal
     const elCluster = document.getElementById("clusterChart");
     if (elCluster && chartData && chartData.labels && chartData.labels.length) {
       const ctx = elCluster.getContext("2d");
