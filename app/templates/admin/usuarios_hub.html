@@ -1,0 +1,102 @@
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h3 class="mb-0">Usuários</h3>
+      <div class="text-muted small">Gerencie nomes, e-mails e permissão de administrador.</div>
+    </div>
+  </div>
+
+  <form class="row g-2 align-items-end mb-3" method="get" action="{{ url_for('usuarios.index') }}">
+    <div class="col-12 col-md-6">
+      <label class="form-label">Buscar</label>
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Nome ou e-mail">
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">Filtro</label>
+      <select class="form-select" name="only_admin">
+        <option value="" {% if not only_admin %}selected{% endif %}>Todos</option>
+        <option value="1" {% if only_admin=='1' %}selected{% endif %}>Somente admins</option>
+      </select>
+    </div>
+
+    <div class="col-12 col-md-3 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('usuarios.index') }}">Limpar</a>
+    </div>
+  </form>
+
+  {% if not usuarios_cards %}
+    <div class="alert alert-warning">Nenhum usuário encontrado.</div>
+  {% else %}
+    <div class="row g-3">
+      {% for u in usuarios_cards %}
+        <div class="col-12 col-lg-6 col-xl-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="fw-semibold">{{ u.nome }}</div>
+                  <div class="text-muted small">{{ u.email }}</div>
+                </div>
+
+                {% if u.is_admin %}
+                  <span class="badge text-bg-primary">Admin</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Usuário</span>
+                {% endif %}
+              </div>
+
+              <hr class="my-3">
+
+              <form method="post" action="{{ url_for('usuarios.index', q=q, only_admin=only_admin) }}">
+                <input type="hidden" name="action" value="toggle_admin">
+                <input type="hidden" name="usuario_id" value="{{ u.id }}">
+
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <div class="fw-semibold">Administrador</div>
+                    <div class="text-muted small">Pode acessar o painel e gerenciar dados.</div>
+                  </div>
+
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input js-admin-switch"
+                           type="checkbox"
+                           {% if u.is_admin %}checked{% endif %}
+                           data-hidden-id="adm{{ u.id }}">
+                    <input type="hidden" id="adm{{ u.id }}" name="is_admin" value="{{ 1 if u.is_admin else 0 }}">
+                  </div>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-end">
+                  <button class="btn btn-outline-primary btn-sm" type="submit">
+                    Salvar
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <script>
+      // UX: ao mexer no switch, atualiza o hidden (0/1)
+      document.querySelectorAll('.js-admin-switch').forEach(sw => {
+        sw.addEventListener('change', () => {
+          const hid = document.getElementById(sw.dataset.hiddenId);
+          if (hid) hid.value = sw.checked ? '1' : '0';
+        });
+      });
+    </script>
+  {% endif %}
+
+</div>
+{% endblock %}

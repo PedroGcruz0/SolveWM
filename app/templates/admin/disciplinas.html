@@ -1,0 +1,162 @@
+{# app/templates/admin/disciplinas.html #}
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">Disciplinas</h3>
+      <div class="text-muted">Visão geral com tópicos, desafios e perguntas. Use os botões para gerenciar rápido.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('conteudos.index') }}">
+        <i class="bi bi-grid"></i> Conteúdos
+      </a>
+      <a class="btn btn-primary" href="/admin/disciplina/new/?url=/admin/disciplinas">
+        <i class="bi bi-plus-circle"></i> Nova disciplina
+      </a>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-md-6">
+          <label class="form-label mb-1">Buscar</label>
+          <input id="discSearch" type="text" class="form-control" placeholder="Digite o nome ou descrição...">
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="text-muted small mt-4 mt-md-0">
+            Dica: clique em <strong>“Ver tópicos”</strong> para expandir detalhes (não polui a tela).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if not disciplinas_cards %}
+    <div class="alert alert-warning">Nenhuma disciplina cadastrada ainda.</div>
+  {% else %}
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3" id="discGrid">
+    {% for d in disciplinas_cards %}
+      <div class="col disc-card"
+           data-filter="{{ (d.nome ~ ' ' ~ (d.descricao or '') )|lower }}">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-journal-bookmark fs-5 text-primary"></i>
+                  <h5 class="mb-0">{{ d.nome }}</h5>
+                </div>
+                {% if d.descricao %}
+                  <div class="text-muted mt-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                    {{ d.descricao }}
+                  </div>
+                {% else %}
+                  <div class="text-muted mt-1"><em>Sem descrição</em></div>
+                {% endif %}
+              </div>
+
+              <span class="badge text-bg-light border">
+                <i class="bi bi-calendar3"></i>
+                {{ d.criado_em }}
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <span class="badge text-bg-primary">Tópicos: {{ d.topicos_count }}</span>
+              <span class="badge text-bg-secondary">Desafios: {{ d.desafios_count }}</span>
+              <span class="badge text-bg-dark">Perguntas: {{ d.perguntas_count }}</span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <a class="btn btn-outline-primary btn-sm"
+                 href="/admin/disciplina/edit/?id={{ d.id }}&url=/admin/disciplinas">
+                <i class="bi bi-pencil-square"></i> Editar
+              </a>
+
+              <a class="btn btn-primary btn-sm"
+                 href="/admin/topico/new/?disciplina_id={{ d.id }}&url=/admin/disciplinas">
+                <i class="bi bi-plus"></i> Novo tópico
+              </a>
+
+              <button class="btn btn-outline-secondary btn-sm"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#top{{ d.id }}"
+                      aria-expanded="false"
+                      aria-controls="top{{ d.id }}">
+                <i class="bi bi-list-ul"></i> Ver tópicos
+              </button>
+            </div>
+
+            <div class="collapse mt-3" id="top{{ d.id }}">
+              <div class="border rounded-3 p-2 bg-light">
+                {% if not d.topicos %}
+                  <div class="text-muted small">Sem tópicos nesta disciplina.</div>
+                {% else %}
+                  <div class="list-group list-group-flush">
+                    {% for t in d.topicos %}
+                      <div class="list-group-item bg-transparent px-0">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                          <div>
+                            <div class="fw-semibold">{{ t.nome }}</div>
+                            {% if t.descricao %}
+                              <div class="text-muted small" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">
+                                {{ t.descricao }}
+                              </div>
+                            {% endif %}
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                              <span class="badge text-bg-secondary">Desafios: {{ t.desafios_count }}</span>
+                              <span class="badge text-bg-dark">Perguntas: {{ t.perguntas_count }}</span>
+                            </div>
+                          </div>
+
+                          <div class="d-flex flex-column gap-2">
+                            <a class="btn btn-outline-primary btn-sm"
+                               href="/admin/topico/edit/?id={{ t.id }}&url=/admin/disciplinas">
+                              <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm"
+                               href="/admin/desafio/new/?topico_id={{ t.id }}&url=/admin/disciplinas">
+                              <i class="bi bi-plus"></i> Novo desafio
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+</div>
+
+<script>
+  (function () {
+    const input = document.getElementById('discSearch');
+    const cards = document.querySelectorAll('.disc-card');
+
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+      const q = (input.value || '').toLowerCase().trim();
+      cards.forEach((c) => {
+        const hay = (c.getAttribute('data-filter') || '');
+        c.style.display = hay.includes(q) ? '' : 'none';
+      });
+    });
+  })();
+</script>
+{% endblock %}

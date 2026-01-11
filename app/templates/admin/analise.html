@@ -1,0 +1,319 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-0">Análise</h1>
+      <small class="text-muted">K-means por taxa de erro (aluno × tópico)</small>
+    </div>
+  </div>
+
+  <form class="form-inline mb-3" method="get" action="{{ url_for('analise.index') }}">
+    <label class="mr-2">Turma</label>
+    <select name="turma_id" class="form-control mr-3" onchange="this.form.submit()">
+      <option value="">Selecione...</option>
+      {% for t in turmas %}
+        <option value="{{ t.id }}" {% if turma_id==t.id %}selected{% endif %}>{{ t.nome }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="mr-2">Grupos (k)</label>
+    <select name="k" class="form-control mr-3" onchange="this.form.submit()">
+      {% for kk in range(1, 11) %}
+        <option value="{{ kk }}" {% if k==kk %}selected{% endif %}>{{ kk }}</option>
+      {% endfor %}
+    </select>
+
+    {% if aluno_id %}
+      <input type="hidden" name="aluno_id" value="{{ aluno_id }}">
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary">Aplicar</button>
+
+    {% if turma_id and aluno_id %}
+      <a class="btn btn-link ml-2" href="{{ url_for('analise.index', turma_id=turma_id, k=k) }}">
+        Ver turma
+      </a>
+    {% endif %}
+  </form>
+
+  {% if not turma_id %}
+    <div class="alert alert-info">Selecione uma turma para visualizar a análise.</div>
+  {% else %}
+
+    <div class="row">
+      <div class="col-lg-8 mb-3">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <strong>Taxa de erro média por grupo em cada tópico</strong>
+            <small class="text-muted">Arraste na horizontal se ficar grande</small>
+          </div>
+          <div class="card-body">
+            {% if chart_data.labels and chart_data.labels|length > 0 %}
+              <div style="overflow-x:auto;">
+                <div style="min-width: {{ 600 + (chart_data.labels|length * 140) }}px; height: 360px;">
+                  <canvas id="clusterChart"></canvas>
+                </div>
+              </div>
+            {% else %}
+              <div class="text-muted">Sem dados suficientes para formar grupos (k-means).</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 mb-3">
+        <div class="card">
+          <div class="card-header"><strong>Acertos vs Erros (Turma)</strong></div>
+          <div class="card-body">
+            <div style="height: 260px;">
+              <canvas id="donutTurmaChart"></canvas>
+            </div>
+            <div class="mt-3 small text-muted">
+              Total: <strong>{{ total_interacoes_turma }}</strong> ·
+              Acertos: <strong>{{ donut_turma.acertos }}</strong> ·
+              Erros: <strong>{{ donut_turma.erros }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# =========================
+       DETALHES DO ALUNO (BOTÃO)
+       ========================= #}
+    {% if aluno_id and aluno_selecionado %}
+      <div id="aluno-detalhes" class="card mb-3">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <strong>Detalhes do aluno</strong>
+            <div class="small text-muted">
+              {{ aluno_selecionado.nome }} · {{ aluno_selecionado.email }}
+            </div>
+          </div>
+          <span class="badge badge-primary">Grupo {{ aluno_grupo if aluno_grupo else "-" }}</span>
+        </div>
+
+        <div class="card-body">
+          <div class="row">
+            <div class="col-lg-4 mb-3">
+              <div style="height: 220px;">
+                <canvas id="donutAlunoChart"></canvas>
+              </div>
+              <div class="mt-2 small text-muted">
+                Total: <strong>{{ total_interacoes_aluno }}</strong> ·
+                Acertos: <strong>{{ donut_aluno.acertos }}</strong> ·
+                Erros: <strong>{{ donut_aluno.erros }}</strong>
+              </div>
+            </div>
+
+            <div class="col-lg-8">
+              <div class="mb-2">
+                <strong>Taxa de erro por tópico (Aluno)</strong>
+                <div class="small text-muted">Tabela horizontal (uma coluna por tópico)</div>
+              </div>
+
+              {% if aluno_topicos and aluno_topicos|length > 0 %}
+                <div style="overflow-x:auto;">
+                  <div style="min-width: {{ 520 + (aluno_topicos|length * 140) }}px;">
+                    <table class="table table-sm table-bordered mb-0">
+                      <thead>
+                        <tr>
+                          <th style="width: 140px;">Métrica</th>
+                          {% for r in aluno_topicos %}
+                            <th class="text-center">{{ r.topico_nome }}</th>
+                          {% endfor %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>Total</th>
+                          {% for r in aluno_topicos %}
+                            <td class="text-right">{{ r.total }}</td>
+                          {% endfor %}
+                        </tr>
+                        <tr>
+                          <th>Erros</th>
+                          {% for r in aluno_topicos %}
+                            <td class="text-right">{{ r.erros }}</td>
+                          {% endfor %}
+                        </tr>
+                        <tr>
+                          <th>Taxa de erro</th>
+                          {% for r in aluno_topicos %}
+                            <td class="text-right">{{ (r.taxa_erro * 100)|round(2) }}%</td>
+                          {% endfor %}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              {% else %}
+                <div class="text-muted">Sem dados por tópico para este aluno.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <a class="btn btn-sm btn-outline-secondary"
+               href="{{ url_for('analise.index', turma_id=turma_id, k=k) }}">
+              Fechar detalhes (voltar para turma)
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card mb-3">
+      <div class="card-header"><strong>Taxa de erro por tópico (Turma)</strong></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Tópico</th>
+                <th class="text-right">Total</th>
+                <th class="text-right">Erros</th>
+                <th class="text-right">Taxa de erro</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in dados_turma %}
+                <tr>
+                  <td>{{ r.topico_nome }}</td>
+                  <td class="text-right">{{ r.total }}</td>
+                  <td class="text-right">{{ r.erros }}</td>
+                  <td class="text-right">{{ (r.taxa_erro * 100)|round(2) }}%</td>
+                </tr>
+              {% endfor %}
+              {% if dados_turma|length == 0 %}
+                <tr><td colspan="4" class="text-muted">Sem dados.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <strong>Alunos da turma</strong>
+        <small class="text-muted">Clique em “Detalhes” para ver tópico×taxa (scroll) e grupo</small>
+      </div>
+      <div class="card-body">
+        {% if alunos_cards and alunos_cards|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th class="text-center">Grupo</th>
+                  <th class="text-right">Interações</th>
+                  <th class="text-right">Taxa de erro</th>
+                  <th class="text-right"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in alunos_cards %}
+                  <tr>
+                    <td>
+                      <div class="font-weight-bold">{{ a.nome }}</div>
+                      <div class="small text-muted">{{ a.email }}</div>
+                    </td>
+                    <td class="text-center">
+                      {% if a.grupo %}
+                        <span class="badge badge-primary">G{{ a.grupo }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-right">{{ a.total }}</td>
+                    <td class="text-right">{{ (a.taxa_erro * 100)|round(2) }}%</td>
+                    <td class="text-right">
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{{ url_for('analise.index', turma_id=turma_id, k=k, aluno_id=a.id) }}#aluno-detalhes">
+                        Detalhes
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">Nenhum aluno encontrado nesta turma.</div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const chartData = {{ (chart_data or {"labels": [], "datasets": []}) | tojson }};
+    const donutTurma = {{ (donut_turma or {"acertos": 0, "erros": 0, "total": 0}) | tojson }};
+    const donutAluno = {{ (donut_aluno or {"acertos": 0, "erros": 0, "total": 0}) | tojson }};
+
+    // Gráfico principal (bar)
+    const elCluster = document.getElementById("clusterChart");
+    if (elCluster && chartData && chartData.labels && chartData.labels.length) {
+      const ctx = elCluster.getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `${context.dataset.label}: ${context.parsed.y}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: (v) => v + "%" }
+            }
+          }
+        }
+      });
+    }
+
+    // Donut turma
+    const elDonutTurma = document.getElementById("donutTurmaChart");
+    if (elDonutTurma) {
+      new Chart(elDonutTurma.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: ["Acertos", "Erros"],
+          datasets: [{ data: [donutTurma.acertos || 0, donutTurma.erros || 0] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    // Donut aluno (só se existir canvas)
+    const elDonutAluno = document.getElementById("donutAlunoChart");
+    if (elDonutAluno) {
+      new Chart(elDonutAluno.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: ["Acertos", "Erros"],
+          datasets: [{ data: [donutAluno.acertos || 0, donutAluno.erros || 0] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+  });
+</script>
+{% endblock %}

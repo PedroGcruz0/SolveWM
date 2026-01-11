@@ -1,0 +1,420 @@
+{# app/templates/admin/turmas_hub.html #}
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-1">Turmas</h2>
+      <div class="text-muted">Crie turmas, vincule disciplinas e matricule alunos (aluno pode estar em várias turmas).</div>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaTurma">
+      <i class="bi bi-plus-circle"></i> Nova turma
+    </button>
+  </div>
+
+  {% if not turmas_cards %}
+    <div class="alert alert-warning">Nenhuma turma criada ainda.</div>
+  {% else %}
+    <div class="row g-3">
+      {% for t in turmas_cards %}
+        <div class="col-12 col-xl-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <h4 class="mb-0">{{ t.nome }}</h4>
+                    <span class="badge text-bg-light border">Código: {{ t.codigo }}</span>
+                  </div>
+                  <div class="text-muted mt-1">
+                    {{ t.descricao if t.descricao else "Sem descrição" }}
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                  <span class="badge text-bg-primary">Alunos: {{ t.n_alunos }}</span>
+                  <span class="badge text-bg-secondary">Disciplinas: {{ t.n_disciplinas }}</span>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button class="btn btn-outline-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEditarTurma"
+                        data-id="{{ t.id }}"
+                        data-nome="{{ t.nome }}"
+                        data-codigo="{{ t.codigo }}"
+                        data-descricao="{{ t.descricao }}">
+                  <i class="bi bi-pencil"></i> Editar
+                </button>
+
+                <button class="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalDisciplinas"
+                        data-id="{{ t.id }}">
+                  <i class="bi bi-journal-bookmark"></i> Disciplinas
+                </button>
+
+                <button class="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAlunos"
+                        data-id="{{ t.id }}">
+                  <i class="bi bi-people"></i> Matricular alunos
+                </button>
+
+                <button class="btn btn-outline-primary"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#det{{ t.id }}">
+                  <i class="bi bi-list-ul"></i> Detalhes
+                </button>
+
+                <button class="btn btn-outline-danger ms-auto"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverTurma"
+                        data-id="{{ t.id }}"
+                        data-nome="{{ t.nome }}">
+                  <i class="bi bi-trash"></i> Remover
+                </button>
+              </div>
+
+              <div class="collapse mt-3" id="det{{ t.id }}">
+                <div class="row g-3">
+
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded p-3">
+                      <div class="fw-semibold mb-2 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-journal-bookmark"></i> Disciplinas</span>
+                        <span class="text-muted small">{{ t.n_disciplinas }}</span>
+                      </div>
+
+                      {% if not t.disciplinas %}
+                        <div class="text-muted">Nenhuma disciplina vinculada.</div>
+                      {% else %}
+                        <div class="vstack gap-2">
+                          {% for d in t.disciplinas %}
+                            <div class="d-flex align-items-center justify-content-between border rounded px-2 py-2">
+                              <div class="fw-semibold">{{ d.nome }}</div>
+                              <span class="text-muted small">vinculada</span>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded p-3">
+                      <div class="fw-semibold mb-2 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-people"></i> Alunos</span>
+                        <span class="text-muted small">{{ t.n_alunos }}</span>
+                      </div>
+
+                      {% if not t.alunos %}
+                        <div class="text-muted">Nenhum aluno matriculado.</div>
+                      {% else %}
+                        <div class="vstack gap-2" style="max-height: 260px; overflow:auto;">
+                          {% for a in t.alunos %}
+                            <div class="d-flex align-items-center justify-content-between border rounded px-2 py-2">
+                              <div>
+                                <div class="fw-semibold">{{ a.nome }}</div>
+                                <div class="text-muted small">{{ a.email }}</div>
+                              </div>
+
+                              <form method="post" action="{{ url_for('turmas.index') }}" class="m-0">
+                                <input type="hidden" name="action" value="remove_aluno">
+                                <input type="hidden" name="turma_id" value="{{ t.id }}">
+                                <input type="hidden" name="usuario_id" value="{{ a.id }}">
+                                <button class="btn btn-outline-danger btn-sm" type="submit">
+                                  <i class="bi bi-x-circle"></i>
+                                </button>
+                              </form>
+                            </div>
+                          {% endfor %}
+                        </div>
+                        <div class="form-text mt-2">O botão remove o aluno apenas desta turma (não afeta outras turmas).</div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+
+{# ==========================
+  MODAL: Nova Turma
+========================== #}
+<div class="modal fade" id="modalNovaTurma" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('turmas.index') }}">
+        <input type="hidden" name="action" value="create_turma">
+        <div class="modal-header">
+          <h5 class="modal-title">Nova turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Nome</label>
+              <input class="form-control" name="nome" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Código</label>
+              <input class="form-control" name="codigo" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-control" name="descricao" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ==========================
+  MODAL: Editar Turma
+========================== #}
+<div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('turmas.index') }}">
+        <input type="hidden" name="action" value="edit_turma">
+        <input type="hidden" name="turma_id" id="edit_turma_id">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Editar turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Nome</label>
+              <input class="form-control" name="nome" id="edit_turma_nome" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Código</label>
+              <input class="form-control" name="codigo" id="edit_turma_codigo" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-control" name="descricao" id="edit_turma_descricao" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ==========================
+  MODAL: Disciplinas (multi-select)
+========================== #}
+<div class="modal fade" id="modalDisciplinas" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('turmas.index') }}">
+        <input type="hidden" name="action" value="set_disciplinas">
+        <input type="hidden" name="turma_id" id="disc_turma_id">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Vincular disciplinas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input class="form-control mb-2" id="discFilter" placeholder="Buscar disciplina...">
+
+          <div class="border rounded p-2" style="max-height: 420px; overflow:auto;">
+            <div class="vstack gap-2" id="discList">
+              {% for d in disciplinas %}
+                <label class="d-flex align-items-center justify-content-between border rounded px-2 py-2 disc-item">
+                  <div class="fw-semibold">{{ d.nome }}</div>
+                  <input class="form-check-input ms-2" type="checkbox" name="disciplina_ids" value="{{ d.id }}">
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-text mt-2">
+            Isso define quais disciplinas aparecem na turma. (Não mexe em alunos.)
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ==========================
+  MODAL: Alunos (multi-select)
+========================== #}
+<div class="modal fade" id="modalAlunos" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('turmas.index') }}">
+        <input type="hidden" name="action" value="add_alunos">
+        <input type="hidden" name="turma_id" id="al_turma_id">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Matricular alunos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input class="form-control mb-2" id="alFilter" placeholder="Buscar aluno por nome ou e-mail...">
+
+          <div class="border rounded p-2" style="max-height: 420px; overflow:auto;">
+            <div class="vstack gap-2" id="alList">
+              {% for a in alunos %}
+                <label class="d-flex align-items-center justify-content-between border rounded px-2 py-2 al-item">
+                  <div>
+                    <div class="fw-semibold">{{ a.nome }}</div>
+                    <div class="text-muted small">{{ a.email }}</div>
+                  </div>
+                  <input class="form-check-input ms-2" type="checkbox" name="usuario_ids" value="{{ a.id }}">
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-text mt-2">
+            Importante: isso <strong>não remove</strong> o aluno de outras turmas. Ele pode participar de várias.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Matricular</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ==========================
+  MODAL: Remover turma
+========================== #}
+<div class="modal fade" id="modalRemoverTurma" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('turmas.index') }}">
+        <input type="hidden" name="action" value="delete_turma">
+        <input type="hidden" name="turma_id" id="del_turma_id">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Remover turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="text-muted" id="del_turma_msg"></div>
+          <div class="alert alert-warning mt-2 mb-0">
+            Isso remove também as matrículas desta turma.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" type="submit">Remover</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // preencher modal editar turma
+  const modalEditar = document.getElementById('modalEditarTurma');
+  if (modalEditar) {
+    modalEditar.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      document.getElementById('edit_turma_id').value = btn.getAttribute('data-id') || '';
+      document.getElementById('edit_turma_nome').value = btn.getAttribute('data-nome') || '';
+      document.getElementById('edit_turma_codigo').value = btn.getAttribute('data-codigo') || '';
+      document.getElementById('edit_turma_descricao').value = btn.getAttribute('data-descricao') || '';
+    });
+  }
+
+  // preencher turma_id nos modais
+  const modalDisc = document.getElementById('modalDisciplinas');
+  if (modalDisc) {
+    modalDisc.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      document.getElementById('disc_turma_id').value = btn.getAttribute('data-id') || '';
+    });
+  }
+
+  const modalAl = document.getElementById('modalAlunos');
+  if (modalAl) {
+    modalAl.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      document.getElementById('al_turma_id').value = btn.getAttribute('data-id') || '';
+    });
+  }
+
+  const modalDel = document.getElementById('modalRemoverTurma');
+  if (modalDel) {
+    modalDel.addEventListener('show.bs.modal', (ev) => {
+      const btn = ev.relatedTarget;
+      const id = btn.getAttribute('data-id') || '';
+      const nome = btn.getAttribute('data-nome') || '';
+      document.getElementById('del_turma_id').value = id;
+      document.getElementById('del_turma_msg').textContent = `Tem certeza que deseja remover a turma "${nome}"?`;
+    });
+  }
+
+  // filtro disciplinas
+  const discFilter = document.getElementById('discFilter');
+  if (discFilter) {
+    discFilter.addEventListener('input', () => {
+      const q = discFilter.value.toLowerCase();
+      document.querySelectorAll('#discList .disc-item').forEach((el) => {
+        const text = el.innerText.toLowerCase();
+        el.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  }
+
+  // filtro alunos
+  const alFilter = document.getElementById('alFilter');
+  if (alFilter) {
+    alFilter.addEventListener('input', () => {
+      const q = alFilter.value.toLowerCase();
+      document.querySelectorAll('#alList .al-item').forEach((el) => {
+        const text = el.innerText.toLowerCase();
+        el.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  }
+</script>
+{% endblock %}

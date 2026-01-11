@@ -1,0 +1,48 @@
+{% extends "modelo.html" %}
+{% block title %}Cadastro - Solve WM{% endblock %}
+
+{% block content %}
+<div class="mx-auto" style="max-width:520px;">
+  <h2 class="fw-bold mb-3">Cadastro</h2>
+
+  <div class="alert alert-info">
+    Digite o <strong>código da turma</strong> fornecido pelo professor.
+  </div>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.nome.label(class="form-label") }}
+      {{ form.nome(class="form-control") }}
+      {% for e in form.nome.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.email.label(class="form-label") }}
+      {{ form.email(class="form-control") }}
+      {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.codigo_turma.label(class="form-label") }}
+      {{ form.codigo_turma(class="form-control") }}
+      {% for e in form.codigo_turma.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.senha.label(class="form-label") }}
+      {{ form.senha(class="form-control") }}
+      {% for e in form.senha.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.senha2.label(class="form-label") }}
+      {{ form.senha2(class="form-control") }}
+      {% for e in form.senha2.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    {{ form.enviar(class="btn btn-primary w-100") }}
+  </form>
+</div>
+{% endblock %}

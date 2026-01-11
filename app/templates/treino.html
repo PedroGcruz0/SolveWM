@@ -1,0 +1,32 @@
+{% extends "modelo.html" %}
+{% block title %}Treino - Solve WM{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/treino.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="treino-wrap">
+  <div class="treino-card">
+    <div class="treino-top">
+      <div>
+        <div class="fw-bold">Treino</div>
+        <div class="small text-muted">Turma → desafio → passos</div>
+      </div>
+      <select id="turmaSelect" class="form-select form-select-sm" style="max-width:260px;">
+        <option>Carregando...</option>
+      </select>
+    </div>
+
+    <div id="chat" class="treino-chat"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script src="{{ url_for('static', filename='js/treino.js') }}"></script>
+{% endblock %}

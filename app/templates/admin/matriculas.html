@@ -1,0 +1,143 @@
+{# app/templates/admin/matriculas.html #}
+{% extends "admin/swm_admin.html" %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h3 class="mb-0">Matrículas</h3>
+      <div class="text-muted">Veja turmas e matricule alunos em uma ou várias turmas.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="/admin/turma/">
+        <i class="bi bi-people"></i> Gerenciar turmas
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="mb-1">Matricular aluno</h5>
+          <div class="text-muted small mb-3">Selecione um aluno e uma ou mais turmas.</div>
+
+          <form method="post" action="{{ url_for('matriculas.matricular') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined }}">
+
+            <div class="mb-3">
+              <label class="form-label">Aluno</label>
+              <select class="form-select" name="usuario_id" required>
+                <option value="" selected disabled>Selecione…</option>
+                {% for a in alunos %}
+                  <option value="{{ a.id }}">{{ a.nome }} — {{ a.email }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Turmas (você pode escolher várias)</label>
+              <select class="form-select" name="turma_ids" multiple size="8" required>
+                {% for t in turmas %}
+                  <option value="{{ t.id }}">{{ t.nome }} ({{ t.codigo }})</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Dica: segure <kbd>Cmd</kbd>/<kbd>Ctrl</kbd> para selecionar várias.</div>
+            </div>
+
+            <button class="btn btn-primary w-100" type="submit">
+              <i class="bi bi-check2-circle"></i> Matricular
+            </button>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <h5 class="mb-0">Turmas disponíveis</h5>
+            <form class="d-flex gap-2" method="get" action="{{ url_for('matriculas.index') }}">
+              <select class="form-select form-select-sm" name="turma_id">
+                <option value="">Ver alunos: (nenhuma)</option>
+                {% for t in turmas %}
+                  <option value="{{ t.id }}" {% if turma_id==t.id %}selected{% endif %}>
+                    {{ t.nome }}
+                  </option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-outline-primary btn-sm" type="submit">
+                <i class="bi bi-funnel"></i> Ver
+              </button>
+              {% if turma_id %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('matriculas.index') }}">Limpar</a>
+              {% endif %}
+            </form>
+          </div>
+
+          <div class="row g-2">
+            {% for t in turmas_cards %}
+              <div class="col-12 col-md-6">
+                <div class="border rounded-3 p-3 h-100">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div class="fw-semibold">{{ t.nome }}</div>
+                      <div class="text-muted small">{{ t.codigo }}</div>
+                    </div>
+                    <span class="badge text-bg-primary">{{ t.qtd_alunos }} alunos</span>
+                  </div>
+                  {% if t.descricao %}
+                    <div class="text-muted small mt-2">{{ t.descricao }}</div>
+                  {% endif %}
+                  <div class="mt-3 d-flex gap-2">
+                    <a class="btn btn-outline-primary btn-sm" href="/admin/turma/">
+                      Abrir turmas
+                    </a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('matriculas.index', turma_id=t.id) }}">
+                      Ver alunos desta turma
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+      {% if turma_id and matriculados %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="mb-2">Alunos matriculados — {{ turma_nome }}</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th class="text-muted">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for m in matriculados %}
+                  <tr>
+                    <td class="fw-semibold">{{ m.nome }}</td>
+                    <td class="text-muted">{{ m.email }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% elif turma_id %}
+        <div class="alert alert-warning mb-0">Nenhum aluno matriculado nesta turma ainda.</div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -6,8 +6,9 @@
 {% endblock %}
 
 {% block content %}
-<div class="tutor-wrap">
+<div class="tutor-wrap" data-turma-id="{{ turma.id }}">
   <div class="tutor-card">
+
     <div class="tutor-top">
       <div>
         <div class="fw-bold">Turma: {{ turma.nome }}</div>
@@ -16,7 +17,47 @@
       <a class="btn btn-outline-primary btn-sm" href="{{ url_for('site.area_aluno') }}">Trocar turma</a>
     </div>
 
-    <div id="chat" class="tutor-chat"></div>
+    <div id="tutorStatus" class="tutor-status"></div>
+
+    <!-- Cabeçalho do desafio -->
+    <div id="desafioBox" class="tutor-section" style="display:none;">
+      <div class="tutor-meta" id="desafioMeta"></div>
+      <h3 class="tutor-title" id="desafioTitulo"></h3>
+
+      <div id="desafioImagemWrap" class="tutor-img-wrap" style="display:none;">
+        <img id="desafioImagem" class="tutor-img" alt="Imagem do enunciado">
+      </div>
+
+      <div id="desafioTexto" class="tutor-enunciado"></div>
+    </div>
+
+    <!-- Área do quiz -->
+    <div id="quizBox" class="tutor-section" style="display:none;">
+      <div class="quiz-head">
+        <div class="quiz-progress" id="quizProgress"></div>
+      </div>
+
+      <div class="quiz-question" id="perguntaEnunciado"></div>
+
+      <div class="quiz-alts" id="alternativas"></div>
+
+      <div id="feedback" class="quiz-feedback" style="display:none;"></div>
+
+      <div class="quiz-actions">
+        <button id="btnContinuar" type="button" class="btn btn-primary" style="display:none;">
+          Continuar
+        </button>
+      </div>
+    </div>
+
+    <!-- Fim do desafio -->
+    <div id="fimBox" class="tutor-section" style="display:none;">
+      <div class="alert alert-success mb-3" id="fimMsg"></div>
+      <button id="btnProximoDesafio" type="button" class="btn btn-primary">
+        Próximo desafio
+      </button>
+    </div>
+
   </div>
 </div>
 {% endblock %}
@@ -26,10 +67,5 @@
   MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$'], ['$$','$$']] }, svg: { fontCache: 'global' } };
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-<script>
-  window.SWM = {
-    logoUrl: "{{ url_for('static', filename='img/logo.png') }}"
-  };
-</script>
 <script src="{{ url_for('static', filename='js/tutor.js') }}"></script>
 {% endblock %}
