@@ -720,7 +720,6 @@ class AnaliseView(AdminAccessMixin, BaseView):
 
 # ============================================================
 # Hubs (Turmas / Alunos / Conteúdos / Atividades / Usuários)
-# (mantidos como você já tinha)
 # ============================================================
 
 def _salvar_imagem_enunciado(file_storage):
@@ -1436,8 +1435,51 @@ class UsuariosHubView(AdminAccessMixin, BaseView):
                 flash("Permissão atualizada.", "success")
                 return redirect(url_for("usuarios.index", q=request.args.get("q", "")))
 
+            # =========================
+            #  remover usuário
+            # =========================
+            if action == "delete_user":
+                usuario_id = request.form.get("usuario_id")
+                u = Usuario.query.get(int(usuario_id)) if usuario_id else None
+
+                if not u:
+                    flash("Usuário inválido.", "error")
+                    return redirect(url_for("usuarios.index", q=request.args.get("q", ""), only_admin=request.args.get("only_admin", "")))
+
+                # não permitir apagar a si mesmo
+                if u.id == current_user.id:
+                    flash("Você não pode remover seu próprio usuário.", "error")
+                    return redirect(url_for("usuarios.index", q=request.args.get("q", ""), only_admin=request.args.get("only_admin", "")))
+
+                # impedir apagar o último admin
+                if u.is_admin:
+                    admins_count = Usuario.query.filter(Usuario.is_admin == True).count()  # noqa: E712
+                    if admins_count <= 1:
+                        flash("Você não pode remover o último administrador.", "error")
+                        return redirect(url_for("usuarios.index", q=request.args.get("q", ""), only_admin=request.args.get("only_admin", "")))
+
+                # remover vínculos para evitar erro de FK
+                # matrículas
+                Matricula.query.filter_by(usuario_id=u.id).delete(synchronize_session=False)
+
+                # tentativas + interações do usuário
+                tentativas_ids = [
+                    tid for (tid,) in db.session.query(TentativaDesafio.id)
+                    .filter(TentativaDesafio.usuario_id == u.id)
+                    .all()
+                ]
+                if tentativas_ids:
+                    Interacao.query.filter(Interacao.tentativa_id.in_(tentativas_ids)).delete(synchronize_session=False)
+                    TentativaDesafio.query.filter(TentativaDesafio.id.in_(tentativas_ids)).delete(synchronize_session=False)
+
+                db.session.delete(u)
+                db.session.commit()
+
+                flash("Usuário removido com sucesso.", "success")
+                return redirect(url_for("usuarios.index", q=request.args.get("q", ""), only_admin=request.args.get("only_admin", "")))
+
             flash("Ação inválida.", "error")
-            return redirect(url_for("usuarios.index"))
+            return redirect(url_for("usuarios.index"))            
 
         q = (request.args.get("q") or "").strip().lower()
         only_admin = (request.args.get("only_admin") or "").strip()

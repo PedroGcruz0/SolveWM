@@ -1,3 +1,4 @@
+{# app/templates/admin/usuarios_hub.html #}
 {% extends "admin/swm_admin.html" %}
 
 {% block body %}
@@ -39,7 +40,8 @@
       {% for u in usuarios_cards %}
         <div class="col-12 col-lg-6 col-xl-4">
           <div class="card h-100 shadow-sm">
-            <div class="card-body">
+            <div class="card-body d-flex flex-column">
+
               <div class="d-flex align-items-start justify-content-between gap-2">
                 <div>
                   <div class="fw-semibold">{{ u.nome }}</div>
@@ -55,11 +57,12 @@
 
               <hr class="my-3">
 
+              {# FORM 1: atualizar permissão #}
               <form method="post" action="{{ url_for('usuarios.index', q=q, only_admin=only_admin) }}">
                 <input type="hidden" name="action" value="toggle_admin">
                 <input type="hidden" name="usuario_id" value="{{ u.id }}">
 
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center justify-content-between gap-3">
                   <div>
                     <div class="fw-semibold">Administrador</div>
                     <div class="text-muted small">Pode acessar o painel e gerenciar dados.</div>
@@ -74,13 +77,22 @@
                   </div>
                 </div>
 
-                <div class="mt-3 d-flex justify-content-end">
-                  <button class="btn btn-outline-primary btn-sm" type="submit">
-                    Salvar
-                  </button>
+                <div class="mt-3 d-flex justify-content-end gap-2">
+                  <button class="btn btn-outline-primary btn-sm" type="submit">Salvar</button>
                 </div>
               </form>
 
+              {# FORM 2: remover usuário (fica ao lado do Salvar usando o mesmo alinhamento) #}
+              <form method="post"
+                    action="{{ url_for('usuarios.index', q=q, only_admin=only_admin) }}"
+                    class="mt-2 d-flex justify-content-end"
+                    onsubmit="return confirm('Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.');">
+                <input type="hidden" name="action" value="delete_user">
+                <input type="hidden" name="usuario_id" value="{{ u.id }}">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Remover</button>
+              </form>
+
+              <div class="mt-auto"></div>
             </div>
           </div>
         </div>
